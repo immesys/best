@@ -1,0 +1,184 @@
+define STORM_HELP
+
+STORM extras:
+  None available at the moment.
+
+endef
+
+HELP += $STORM_HELP)
+
+OBJCOPY = arm-none-eabi-objcopy
+OBJDUMP = arm-none-eabi-objdump
+SET_ID = sload
+NCC = ncc
+LIBS = -lm
+
+AMADDR = ActiveMessageAddressC\$$addr
+BUILDDIR ?= build/$(PLATFORM)
+MAIN_EXE = $(BUILDDIR)/main.exe
+MAIN_BIN = $(BUILDDIR)/main.bin
+MAIN_IHEX = $(BUILDDIR)/main.ihex
+INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
+INCLUDE_DIRS ?= $(TOSDIR)/platforms/$(PLATFORM)
+EXTRA_MODULES ?= $(TOSDIR)/platforms/$(PLATFORM)/stormcrt1.c
+
+
+
+OPTFLAGS ?= -O3 -g
+CFLAGS += -mthumb -D__SAM4LC8C__ -D__ATSAM4LC8C__ -DARM_MATH_CM4=true  -O1 -fdata-sections 
+CFLAGS += -ffunction-sections -mlong-calls -g3 -mcpu=cortex-m4 -pipe -fno-strict-aliasing 
+CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections --param max-inline-insns-single=500
+
+#Hack in the ASF
+
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/clock/sam4l/dfll.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/clock/sam4l/osc.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/clock/sam4l/pll.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/clock/sam4l/sysclk.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/serial/usart_serial.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/sleepmgr/sam4l/sleepmgr.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/utils/stdio/read.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/utils/stdio/write.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/acifc/acifc.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/adcife/adcife.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/aesa/aesa.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/ast/ast.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/bpm/bpm.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/crccu/crccu.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/dacc/dacc.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/eic/eic.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/events/events.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/flashcalw/flashcalw.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/gloc/gloc.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/gpio/gpio.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/hmatrixb/hmatrixb.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/lcdca/lcdca.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/parc/parc.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/pdca/pdca.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/picouart/picouart.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/spi/spi.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/tc/tc.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/twim/twim.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/twis/twis.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/usart/usart.c 
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/wdt/wdt_sam4l.c 
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/common/utils/interrupt/interrupt_sam_nvic.c
+#EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils/cmsis/sam4l/source/templates/system_sam4l.c 
+
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/boards/user_board" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/utils" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils/cmsis/sam4l/include" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils/cmsis/sam4l/source/templates" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils/header_files" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/utils/preprocessor" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/thirdparty/CMSIS/Include" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/thirdparty/CMSIS/Lib/GCC" 
+##ASF_INCLUDES += -I"../src/config" 
+##ASF_INCLUDES += -I"$(ToolchainDir)\..\..\CMSIS_Atmel" 
+##ASF_INCLUDES += -I"$(ToolchainDir)\..\..\CMSIS_Atmel\CMSIS\Include" 
+##ASF_INCLUDES += -I"$(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL" 
+##ASF_INCLUDES += -I"$(ToolchainDir)\..\..\CMSIS_Atmel\Device\ATMEL\sam4l\include" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/bpm" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/flashcalw" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/clock" 
+ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/ioport" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/wdt" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/boards" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/acifc" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/adcife" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/aesa" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/ast" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/cpu" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/crccu" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/dacc" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/eic" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/events" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/gloc" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/gpio" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/hmatrixb" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/lcdca" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/pdca" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/picouart" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/spi" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/tc" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/twim" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/twis" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/usart" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/serial/sam_uart" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/serial" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/services/sleepmgr" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/common/utils/stdio/stdio_serial" 
+#ASF_INCLUDES += -I"$(TOSDIR)/platforms/$(PLATFORM)/ASF/sam/drivers/parc"
+ASF_INCLUDES += -I/home/immesys/w/best/apps/LessNull
+
+PFLAGS += $(EXTRA_MODULES)
+PFLAGS += -I$(INCLUDE_DIRS)
+PFLAGS += $(ASF_INCLUDES)
+PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
+PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c
+PFLAGS += -finline-limit=100000
+PFLAGS += -board=$(SENSORBOARD)
+
+# can be overridden by MP-enabled linker file (see mpu.extra)
+LINKERFILE = stormpayload.ld
+LDFLAGS += -L$(INCLUDE_DIRS) -T $(LINKERFILE)
+
+BUILDLESS_DEPS += bytes
+
+# Build storage file if volumes.xml present
+#ifneq ($(wildcard $(VOLUME_FILE)), )
+#build_storage: $(BUILDDIR)/StorageVolumes.h
+
+
+build_storage:
+
+
+ifndef BUILD_DEPS
+  ifeq ($(filter $(BUILDLESS_DEPS),$(GOALS)),)
+    BUILD_DEPS = bin tosimage bytes $(POST_BUILD_EXTRA_DEPS)
+  endif
+endif
+
+ifdef MSG_SIZE
+PFLAGS += -DTOSH_DATA_LENGTH=$(MSG_SIZE)
+endif
+ifdef DEFAULT_LOCAL_GROUP
+PFLAGS += -DDEFINED_TOS_AM_GROUP=$(DEFAULT_LOCAL_GROUP)
+endif
+
+
+DEFAULT_PROGRAM ?= sload
+
+# Use the 'if' function instead of the 'ifdef' construct because ifdef freaks
+# out with call in there.  I don't know why.
+$(if $(PROGRAM),,$(call TOSMake_include,storm/$(DEFAULT_PROGRAM).extra))
+
+exe: exe0 bytes FORCE
+	@:
+
+exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
+	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
+ifdef WIRING_CHECK_FILE
+	@nescc-wiring $(WIRING_CHECK_FILE)
+endif
+	@echo "    compiled $(COMPONENT) to $(MAIN_EXE)"
+
+builddir: FORCE
+	mkdir -p $(BUILDDIR)
+
+setid: FORCE
+	@cmd () { echo "$$@"; $$@; }; if [ x = x$(NODEID) ]; then cmd $(OBJCOPY) --output-target=binary $(MAIN_EXE) $(INSTALL_BIN); else cmd $(SET_ID) --objcopy $(OBJCOPY) --objdump $(OBJDUMP) --target binary $(MAIN_EXE) $(INSTALL_BIN) TOS_NODE_ID=$(NODEID) $(AMADDR)=$(NODEID); fi
+
+tosimage: ihex build_tosimage FORCE
+	@:
+
+bin: exe FORCE
+	$(OBJCOPY) --output-target=binary $(MAIN_EXE) $(MAIN_BIN)
+
+ihex: exe FORCE
+	$(OBJCOPY) --output-target=ihex $(MAIN_EXE) $(MAIN_IHEX)
+
+bytes: FORCE
+	@$(OBJDUMP) -h $(MAIN_EXE) | perl -ne '$$b{$$1}=hex $$2 if /^\s*\d+\s*\.(text|data|bss)\s+(\S+)/; END { printf("%16d bytes in ROM\n%16d bytes in RAM\n",$$b{text}+$$b{data},$$b{data}+$$b{bss}); }'

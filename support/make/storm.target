@@ -1,0 +1,6 @@
+PLATFORM = storm
+
+$(call TOSMake_include_platform,storm)
+
+storm: $(BUILD_DEPS)
+	@:
