@@ -1,0 +1,4 @@
+
+NODEID = $(INSTALL)
+BUILD_DEPS = sdb $(POST_BUILD_EXTRA_DEPS) setid program 
+

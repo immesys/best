@@ -40,6 +40,9 @@
 #ifndef ATSAM4L_HARDWARE_H
 #define ATSAM4L_HARDWARE_H
 
+#include "cmsis/sam4lc8c.h"
+#include "atsam4ltypes.h"
+
 #define ROUNDDOWN(a, n)                                         \
 ({                                                              \
         uint32_t __a = (uint32_t) (a);                          \
