@@ -44,44 +44,13 @@ module McuSleepC
 }
 implementation{
 
- 
-  uint32_t getPowerState() {
-    return 0;
-  }
-
-  void commonSleep() {
-
-  }
-
-  void commonResume() {
-    
-  }
-
-  void setupSleepMode() {
-  
-  }
-  void resumeFromSleepMode() {
-
-  }
-
-  void setupWaitMode() {
-   
-  }
-
-  void resumeFromWaitMode() {
-    
-  }
-
-  void setupBackupMode() {
-   
-  }
-  void resumeFromBackupMode() {
-   
-  }
-
   async command void McuSleep.sleep()
   {
-   
+        uint8_t i;
+        __nesc_enable_interrupt();
+       
+        for (i = 0; i < 10; i++);
+        __nesc_disable_interrupt();
   }
 
   async command void McuPowerState.update(){}

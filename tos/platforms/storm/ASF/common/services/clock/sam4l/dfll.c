@@ -142,7 +142,7 @@ void dfll_enable_config_defaults(uint32_t dfll_id)
 #ifdef CONFIG_DFLL0_SOURCE
 	struct dfll_config dfllcfg;
 #endif
-	static bool open_loop_done = false;
+	static unsigned char open_loop_done = false;
 
 	if(SCIF->SCIF_DFLL0CONF & SCIF_DFLL0CONF_MODE) {
 		// Closed-loop mode

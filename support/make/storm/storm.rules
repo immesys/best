@@ -24,7 +24,7 @@ MAIN_SDB = $(BUILDDIR)/main.sdb
 
 INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
 INCLUDE_DIRS ?= $(TOSDIR)/platforms/$(PLATFORM)
-EXTRA_MODULES ?= $(TOSDIR)/platforms/$(PLATFORM)/stormcrt1.c
+EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/stormcrt1.c
 EXTRA_MODULES += -L$(TOSDIR)/chips/atsam4l/cmsis/Lib/GCC/
 
 OPTFLAGS ?= -O3 -g
@@ -34,7 +34,7 @@ CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections --param max-inline-insn
 
 #ASF_INCLUDES += -I/home/immesys/w/best/apps/LessNull
 
-PFLAGS += $(EXTRA_MODULES)
+
 PFLAGS += -I$(INCLUDE_DIRS)
 PFLAGS += -I$(TOSDIR)/chips/atsam4l/cmsis/Include
 PFLAGS += -larm_cortexM4l_math
@@ -42,6 +42,7 @@ PFLAGS += -Wall -Wshadow $(NESC_FLAGS)
 PFLAGS += -target=$(PLATFORM) -fnesc-cfile=$(BUILDDIR)/app.c
 PFLAGS += -finline-limit=100000
 PFLAGS += -board=$(SENSORBOARD)
+PFLAGS += $(EXTRA_MODULES)
 
 # can be overridden by MP-enabled linker file (see mpu.extra)
 LINKERFILE = stormpayload.ld

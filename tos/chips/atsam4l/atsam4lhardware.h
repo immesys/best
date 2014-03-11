@@ -42,6 +42,9 @@
 
 #include "cmsis/sam4lc8c.h"
 #include "atsam4ltypes.h"
+#include <interrupt_sam_nvic.h>
+
+#define DEBUGHANG() do{REG_GPIO_ODERS1 = (1<<8); while(1) {REG_GPIO_OVRT1 = (1<<8);} } while(0)
 
 #define ROUNDDOWN(a, n)                                         \
 ({                                                              \
@@ -56,6 +59,31 @@
 })
 
 typedef uint32_t __nesc_atomic_t;
+
+#if 0
+//XTAG TODO with barriers and stuff
+inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((always_inline))
+{
+  //  uint32_t state;
+   // state = cpu_irq_is_enabled();
+   // cpu_irq_disable();
+   // return state == 0;
+  // cpu_irq_enter_critical();
+   return 0;
+}
+inline void __nesc_atomic_end(__nesc_atomic_t oldState) @spontaneous() __attribute__((always_inline))
+{
+    //cpu_irq_leave_critical();
+}
+inline void __nesc_enable_interrupt() __attribute__((always_inline))
+{
+    cpu_irq_enable();
+}
+inline void __nesc_disable_interrupt() __attribute__((always_inline))
+{
+    cpu_irq_disable();
+}
+#endif
 
 inline __nesc_atomic_t __nesc_atomic_start() @spontaneous() __attribute__((always_inline))
 {
@@ -107,5 +135,6 @@ inline void __nesc_disable_interrupt() __attribute__((always_inline))
 		: "r" (newState) // input
 	);
 }
+
 
 #endif // CORTEXM3_HARDWARE_H

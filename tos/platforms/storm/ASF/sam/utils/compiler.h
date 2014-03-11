@@ -68,7 +68,6 @@
 #ifndef __ASSEMBLY__ // Not defined for assembling.
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -230,9 +229,6 @@
 //! @{
 typedef unsigned char           Bool; //!< Boolean.
 #ifndef __cplusplus
-#if !defined(__bool_true_false_are_defined)
-typedef unsigned char           bool; //!< Boolean.
-#endif
 
 #endif
 typedef int8_t                  S8 ;  //!< 8-bit signed integer.

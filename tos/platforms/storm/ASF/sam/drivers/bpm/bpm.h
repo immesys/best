@@ -174,7 +174,7 @@ void bpm_power_scaling_cpu(Bpm *bpm, uint32_t ps_value);
  * \param timeout Timeout, in number of processor clocks, max 0xFFFFFF.
  * \return true if PSOK is ready.
  */
-bool bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
+unsigned char bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
 		uint32_t timeout);
 
 /**
@@ -191,7 +191,7 @@ bool bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
  * \return true if no error.
  */
 __always_inline static
-bool bpm_configure_power_scaling(Bpm *bpm, uint32_t ps_value, uint32_t no_halt)
+unsigned char bpm_configure_power_scaling(Bpm *bpm, uint32_t ps_value, uint32_t no_halt)
 {
 	if (!no_halt) {
 		bpm_power_scaling_cpu(bpm, ps_value);

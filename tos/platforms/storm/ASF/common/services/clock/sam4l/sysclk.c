@@ -42,7 +42,6 @@
  */
 
 #include <compiler.h>
-#include <stdbool.h>
 #include <sysclk.h>
 #include <flashcalw.h>
 #include <bpm.h>
@@ -129,9 +128,9 @@
 
 #if defined(CONFIG_SYSCLK_DEFAULT_RETURNS_SLOW_OSC)
 /**
- * \brief boolean signalling that the sysclk_init is done.
+ * \brief unsigned charean signalling that the sysclk_init is done.
  */
-bool sysclk_initialized = false;
+unsigned char sysclk_initialized = false;
 #endif
 
 /**
@@ -876,7 +875,7 @@ void sysclk_disable_usb(void)
 void sysclk_init(void)
 {
 	uint32_t ps_value = 0;
-	bool is_fwu_enabled = false;
+	unsigned char is_fwu_enabled = false;
 
 #if CONFIG_HCACHE_ENABLE == 1
 	/* Enable HCACHE */

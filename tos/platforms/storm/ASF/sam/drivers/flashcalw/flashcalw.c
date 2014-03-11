@@ -177,10 +177,10 @@ void flashcalw_set_wait_state(uint32_t wait_state)
  *
  * \param cpu_f_hz The CPU frequency
  * \param ps_value Power Scaling mode value (0, 1)
- * \param is_fwu_enabled (boolean), Is fast wakeup mode enabled or not
+ * \param is_fwu_enabled (unsigned charean), Is fast wakeup mode enabled or not
  */
 void flashcalw_set_flash_waitstate_and_readmode(uint32_t cpu_f_hz,
-		uint32_t ps_value, bool is_fwu_enabled)
+		uint32_t ps_value, unsigned char is_fwu_enabled)
 {
 #ifdef CONFIG_FLASH_READ_MODE_HIGH_SPEED_ENABLE
 	UNUSED(ps_value);
@@ -252,7 +252,7 @@ void flashcalw_set_flash_waitstate_and_readmode(uint32_t cpu_f_hz,
  *
  * \return Whether the Flash Ready interrupt is enabled.
  */
-bool flashcalw_is_ready_int_enabled(void)
+unsigned char flashcalw_is_ready_int_enabled(void)
 {
 	return ((HFLASHC->FLASHCALW_FCR & FLASHCALW_FCR_FRDY) != 0);
 }
@@ -262,7 +262,7 @@ bool flashcalw_is_ready_int_enabled(void)
  * \param enable Whether to enable the Flash Ready interrupt: \c true or
  *               \c false.
  */
-void flashcalw_enable_ready_int(bool enable)
+void flashcalw_enable_ready_int(unsigned char enable)
 {
 	HFLASHC->FLASHCALW_FCR
 		&= ((enable &
@@ -273,7 +273,7 @@ void flashcalw_enable_ready_int(bool enable)
  *
  * \return Whether the Lock Error interrupt is enabled.
  */
-bool flashcalw_is_lock_error_int_enabled(void)
+unsigned char flashcalw_is_lock_error_int_enabled(void)
 {
 	return ((HFLASHC->FLASHCALW_FCR & FLASHCALW_FCR_LOCKE) != 0);
 }
@@ -283,7 +283,7 @@ bool flashcalw_is_lock_error_int_enabled(void)
  * \param enable Whether to enable the Lock Error interrupt: \c true or
  *               \c false.
  */
-void flashcalw_enable_lock_error_int(bool enable)
+void flashcalw_enable_lock_error_int(unsigned char enable)
 {
 	HFLASHC->FLASHCALW_FCR
 		&= ((enable &
@@ -294,7 +294,7 @@ void flashcalw_enable_lock_error_int(bool enable)
  *
  * \return Whether the Programming Error interrupt is enabled.
  */
-bool flashcalw_is_prog_error_int_enabled(void)
+unsigned char flashcalw_is_prog_error_int_enabled(void)
 {
 	return ((HFLASHC->FLASHCALW_FCR & FLASHCALW_FCR_PROGE) != 0);
 }
@@ -304,7 +304,7 @@ bool flashcalw_is_prog_error_int_enabled(void)
  * \param enable Whether to enable the Programming Error interrupt: \c true or
  *               \c false.
  */
-void flashcalw_enable_prog_error_int(bool enable)
+void flashcalw_enable_prog_error_int(unsigned char enable)
 {
 	HFLASHC->FLASHCALW_FCR &= ((enable &
 			FLASHCALW_FCR_PROGE) | (~FLASHCALW_FCR_PROGE));
@@ -320,7 +320,7 @@ void flashcalw_enable_prog_error_int(bool enable)
  *
  * \return Whether the FLASHCALW is ready to run a new command.
  */
-bool flashcalw_is_ready(void)
+unsigned char flashcalw_is_ready(void)
 {
 	return ((HFLASHC->FLASHCALW_FSR & FLASHCALW_FSR_FRDY) != 0);
 }
@@ -379,7 +379,7 @@ static uint32_t flashcalw_error_status = 0;
  * \return Whether a Lock Error has occurred during the last function called
  *         that issued one or more FLASHCALW commands.
  */
-bool flashcalw_is_lock_error(void)
+unsigned char flashcalw_is_lock_error(void)
 {
 	return ((flashcalw_error_status & FLASHCALW_FSR_LOCKE) != 0);
 }
@@ -390,7 +390,7 @@ bool flashcalw_is_lock_error(void)
  * \return Whether a Programming Error has occurred during the last function
  *         called that issued one or more FLASHCALW commands.
  */
-bool flashcalw_is_programming_error(void)
+unsigned char flashcalw_is_programming_error(void)
 {
 	return ((flashcalw_error_status & FLASHCALW_FSR_PROGE) != 0);
 }
@@ -506,7 +506,7 @@ void flashcalw_erase_all(void)
  *
  * \return Whether the Security bit is active.
  */
-bool flashcalw_is_security_bit_active(void)
+unsigned char flashcalw_is_security_bit_active(void)
 {
 	return ((HFLASHC->FLASHCALW_FSR & FLASHCALW_FSR_SECURITY) != 0);
 }
@@ -530,7 +530,7 @@ void flashcalw_set_security_bit(void)
  *
  * \return Whether the region of the specified page is locked.
  */
-bool flashcalw_is_page_region_locked(uint32_t page_number)
+unsigned char flashcalw_is_page_region_locked(uint32_t page_number)
 {
 	return flashcalw_is_region_locked(flashcalw_get_page_region(page_number));
 }
@@ -541,7 +541,7 @@ bool flashcalw_is_page_region_locked(uint32_t page_number)
  *
  * \return Whether the specified region is locked.
  */
-bool flashcalw_is_region_locked(uint32_t region)
+unsigned char flashcalw_is_region_locked(uint32_t region)
 {
 	return ((HFLASHC->FLASHCALW_FSR & FLASHCALW_FSR_LOCK0
 			<< (region & (FLASHCALW_REGIONS - 1))) != 0);
@@ -559,7 +559,7 @@ bool flashcalw_is_region_locked(uint32_t region)
  * \note The FLASHCALW error status returned by \ref flashcalw_is_lock_error and
  *       \ref flashcalw_is_programming_error is updated.
  */
-void flashcalw_lock_page_region(int page_number, bool lock)
+void flashcalw_lock_page_region(int page_number, unsigned char lock)
 {
 	flashcalw_issue_command(
 			(lock) ? FLASHCALW_FCMD_CMD_LP : FLASHCALW_FCMD_CMD_UP,
@@ -574,7 +574,7 @@ void flashcalw_lock_page_region(int page_number, bool lock)
  * \note The FLASHCALW error status returned by \ref flashcalw_is_lock_error and
  *       \ref flashcalw_is_programming_error is updated.
  */
-void flashcalw_lock_region(uint32_t region, bool lock)
+void flashcalw_lock_region(uint32_t region, unsigned char lock)
 {
 	flashcalw_lock_page_region(flashcalw_get_region_first_page_number(
 			region), lock);
@@ -587,7 +587,7 @@ void flashcalw_lock_region(uint32_t region, bool lock)
  * \note The FLASHCALW error status returned by \ref flashcalw_is_lock_error and
  *       \ref flashcalw_is_programming_error is updated.
  */
-void flashcalw_lock_all_regions(bool lock)
+void flashcalw_lock_all_regions(unsigned char lock)
 {
 	uint32_t error_status = 0;
 	uint32_t region = FLASHCALW_REGIONS;
@@ -615,7 +615,7 @@ void flashcalw_lock_all_regions(bool lock)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-bool flashcalw_read_gp_fuse_bit(uint32_t gp_fuse_bit)
+unsigned char flashcalw_read_gp_fuse_bit(uint32_t gp_fuse_bit)
 {
 	return ((flashcalw_read_all_gp_fuses() & (uint64_t)1 << (gp_fuse_bit & 0x3F))
 		!= 0);
@@ -689,7 +689,7 @@ uint64_t flashcalw_read_all_gp_fuses(void)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-bool flashcalw_erase_gp_fuse_bit(uint32_t gp_fuse_bit, bool check)
+unsigned char flashcalw_erase_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char check)
 {
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_EGPB, gp_fuse_bit & 0x3F);
 	return (check) ? flashcalw_read_gp_fuse_bit(gp_fuse_bit) : true;
@@ -718,7 +718,7 @@ bool flashcalw_erase_gp_fuse_bit(uint32_t gp_fuse_bit, bool check)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-bool flashcalw_erase_gp_fuse_bitfield(uint32_t pos, uint32_t width, bool check)
+unsigned char flashcalw_erase_gp_fuse_bitfield(uint32_t pos, uint32_t width, unsigned char check)
 {
 	uint32_t error_status = 0;
 	uint32_t gp_fuse_bit;
@@ -754,7 +754,7 @@ bool flashcalw_erase_gp_fuse_bitfield(uint32_t pos, uint32_t width, bool check)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-bool flashcalw_erase_gp_fuse_byte(uint32_t gp_fuse_byte, bool check)
+unsigned char flashcalw_erase_gp_fuse_byte(uint32_t gp_fuse_byte, unsigned char check)
 {
 	uint32_t error_status;
 	uint32_t current_gp_fuse_byte;
@@ -793,7 +793,7 @@ bool flashcalw_erase_gp_fuse_byte(uint32_t gp_fuse_byte, bool check)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-bool flashcalw_erase_all_gp_fuses(bool check)
+unsigned char flashcalw_erase_all_gp_fuses(unsigned char check)
 {
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_EAGPF, -1);
 	/**
@@ -822,7 +822,7 @@ bool flashcalw_erase_all_gp_fuses(bool check)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-void flashcalw_write_gp_fuse_bit(uint32_t gp_fuse_bit, bool value)
+void flashcalw_write_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char value)
 {
 	if (!value) {
 		flashcalw_issue_command(FLASHCALW_FCMD_CMD_WGPB, gp_fuse_bit
@@ -935,7 +935,7 @@ void flashcalw_write_all_gp_fuses(uint64_t value)
  *       is given by \c FLASH_GPF_NUM. The other bits among the 64 are
  *       fixed at 1 by hardware.
  */
-void flashcalw_set_gp_fuse_bit(uint32_t gp_fuse_bit, bool value)
+void flashcalw_set_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char value)
 {
 	if (value) {
 		flashcalw_erase_gp_fuse_bit(gp_fuse_bit, false);
@@ -1084,7 +1084,7 @@ void flashcalw_clear_page_buffer(void)
  * \return Whether the page to which the last Quick Page Read or Quick Page Read
  *         User Page command was applied was erased.
  */
-bool flashcalw_is_page_erased(void)
+unsigned char flashcalw_is_page_erased(void)
 {
 	return ((HFLASHC->FLASHCALW_FSR & FLASHCALW_FSR_QPRR) != 0);
 }
@@ -1101,7 +1101,7 @@ bool flashcalw_is_page_erased(void)
  * \note The FLASHCALW error status returned by \ref flashcalw_is_lock_error and
  *       \ref flashcalw_is_programming_error is updated.
  */
-bool flashcalw_quick_page_read(int page_number)
+unsigned char flashcalw_quick_page_read(int page_number)
 {
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_QPR, page_number);
 	return flashcalw_is_page_erased();
@@ -1126,9 +1126,9 @@ bool flashcalw_quick_page_read(int page_number)
  *
  * \note An erase operation can only set bits.
  */
-bool flashcalw_erase_page(int page_number, bool check)
+unsigned char flashcalw_erase_page(int page_number, unsigned char check)
 {
-	bool page_erased = true;
+	unsigned char page_erased = true;
 
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_EP, page_number);
 
@@ -1156,9 +1156,9 @@ bool flashcalw_erase_page(int page_number, bool check)
  *
  * \note An erase operation can only set bits.
  */
-bool flashcalw_erase_all_pages(bool check)
+unsigned char flashcalw_erase_all_pages(unsigned char check)
 {
-	bool all_pages_erased = true;
+	unsigned char all_pages_erased = true;
 	uint32_t error_status = 0;
 	uint32_t page_number = flashcalw_get_page_count();
 
@@ -1201,7 +1201,7 @@ void flashcalw_write_page(int page_number)
  * \note The FLASHCALW error status returned by \ref flashcalw_is_lock_error and
  *       \ref flashcalw_is_programming_error is updated.
  */
-bool flashcalw_quick_user_page_read(void)
+unsigned char flashcalw_quick_user_page_read(void)
 {
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_QPRUP, -1);
 	return flashcalw_is_page_erased();
@@ -1219,7 +1219,7 @@ bool flashcalw_quick_user_page_read(void)
  *
  * \note An erase operation can only set bits.
  */
-bool flashcalw_erase_user_page(bool check)
+unsigned char flashcalw_erase_user_page(unsigned char check)
 {
 	flashcalw_issue_command(FLASHCALW_FCMD_CMD_EUP, -1);
 	return (check) ? flashcalw_quick_user_page_read() : true;
@@ -1265,7 +1265,7 @@ void flashcalw_write_user_page(void)
  *       \ref flashcalw_is_programming_error is updated.
  */
 volatile void *flashcalw_memset8(volatile void *dst, uint8_t src, size_t nbytes,
-		bool erase)
+		unsigned char erase)
 {
 	return flashcalw_memset16(dst, src | (uint16_t)src << 8, nbytes, erase);
 }
@@ -1295,7 +1295,7 @@ volatile void *flashcalw_memset8(volatile void *dst, uint8_t src, size_t nbytes,
  *       \ref flashcalw_is_programming_error is updated.
  */
 volatile void *flashcalw_memset16(volatile void *dst, uint16_t src,
-		size_t nbytes, bool erase)
+		size_t nbytes, unsigned char erase)
 {
 	return flashcalw_memset32(dst, src | (uint32_t)src << 16, nbytes,
 			erase);
@@ -1326,7 +1326,7 @@ volatile void *flashcalw_memset16(volatile void *dst, uint16_t src,
  *       \ref flashcalw_is_programming_error is updated.
  */
 volatile void *flashcalw_memset32(volatile void *dst, uint32_t src,
-		size_t nbytes, bool erase)
+		size_t nbytes, unsigned char erase)
 {
 	return flashcalw_memset64(dst, src | (uint64_t)src << 32, nbytes,
 			erase);
@@ -1357,7 +1357,7 @@ volatile void *flashcalw_memset32(volatile void *dst, uint32_t src,
  *       \ref flashcalw_is_programming_error is updated.
  */
 volatile void *flashcalw_memset64(volatile void *dst, uint64_t src,
-		size_t nbytes, bool erase)
+		size_t nbytes, unsigned char erase)
 {
 	/* Use aggregated pointers to have several alignments available for a
 	 * same address. */
@@ -1366,7 +1366,7 @@ volatile void *flashcalw_memset64(volatile void *dst, uint64_t src,
 	Union64 source = {0};
 	StructCVPtr dest_end;
 	UnionCVPtr flash_page_source_end;
-	bool incomplete_flash_page_end;
+	unsigned char incomplete_flash_page_end;
 	Union64 flash_dword;
 	UnionVPtr tmp;
 	uint32_t error_status = 0;
@@ -1607,12 +1607,12 @@ volatile void *flashcalw_memset64(volatile void *dst, uint64_t src,
  *       \ref flashcalw_is_programming_error is updated.
  */
 volatile void *flashcalw_memcpy(volatile void *dst, const void *src,
-		size_t nbytes, bool erase)
+		size_t nbytes, unsigned char erase)
 {
 	uint16_t page_pos;
 	Union64 flash_dword;
 	uint8_t i;
-	bool b_user_page;
+	unsigned char b_user_page;
 	uint32_t error_status = 0;
 	volatile uint8_t *flash_add;
 	volatile uint8_t *dest_add = (uint8_t *)dst;

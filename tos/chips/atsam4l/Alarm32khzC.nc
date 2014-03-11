@@ -25,6 +25,8 @@ implementation
     */
     async command void Alarm32khz.start(uint32_t dt)
     {   
+        call HplAST.stop();
+        call HplAST.enableAlarmInterrupt();
         call HplAST.setAlarmValue(call HplAST.getCounterValue() + dt);
         call HplAST.start();
     }
@@ -70,6 +72,7 @@ implementation
         uint32_t t1 = t0 + dt;
         uint32_t n = call HplAST.getCounterValue();
         
+        call HplAST.stop();
         if ( (t0 < n && n < t1) ||
              (t1 < n && n < t0) )
         {//now is between the two events
@@ -80,7 +83,6 @@ implementation
             else
             {
                 call HplAST.setAlarmValue(t1);
-                call HplAST.start();
             }
         }
         else
@@ -92,9 +94,9 @@ implementation
             else
             {
                 call HplAST.setAlarmValue(t1);
-                call HplAST.start();
             }
         }
+        call HplAST.start();
     }
 
     /**
@@ -119,12 +121,13 @@ implementation
     
     async event void HplAST.alarmFired()
     {
+        call HplAST.clearAlarmInterrupt();
         signal Alarm32khz.fired();
     }
     
     async event void HplAST.overflowFired()
     {
-    
+        call HplAST.clearOverflowInterrupt();
     }
     
 }

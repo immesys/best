@@ -44,7 +44,7 @@
 #include "compiler.h"
 #include "bpm.h"
 
-RAMFUNC bool bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon);
+RAMFUNC unsigned char bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon);
 /**
  * \brief Execute Power Scaling No Halt with a delay loop
  *
@@ -55,10 +55,10 @@ RAMFUNC bool bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon);
  *
  * \return PSOK status, true if set.
  */
-RAMFUNC bool bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon)
+RAMFUNC unsigned char bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon)
 {
-	bool b_psok = false;
-	bool b_timeout = false;
+	unsigned char b_psok = false;
+	unsigned char b_timeout = false;
 	BPM_UNLOCK(PMCON);
 	bpm->BPM_PMCON = pmcon;
 	do {
@@ -69,7 +69,7 @@ RAMFUNC bool bpm_ps_no_halt_exec(Bpm *bpm, uint32_t pmcon)
 }
 
 
-bool bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
+unsigned char bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
 	uint32_t timeout)
 {
 	uint32_t pmcon = 0;
@@ -89,7 +89,7 @@ bool bpm_power_scaling_cpu_failsafe(Bpm *bpm, uint32_t ps_value,
 
 	/* Execute power scaling no halt in RAM */
 	irqflags_t flags;
-	bool b_psok;
+	unsigned char b_psok;
 	uint32_t ctrl, load, val;
 	/* Avoid interrupt while flash halt */
 	flags = cpu_irq_save();

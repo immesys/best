@@ -119,7 +119,7 @@
 
 #  define cpu_irq_enable()                     \
 	do {                                       \
-		g_interrupt_enabled = true;            \
+		g_interrupt_enabled = 1;            \
 		__DMB();                               \
 		__enable_irq();                        \
 	} while (0)
@@ -127,7 +127,7 @@
 	do {                                       \
 		__disable_irq();                       \
 		__DMB();                               \
-		g_interrupt_enabled = false;           \
+		g_interrupt_enabled = 0;           \
 	} while (0)
 
 typedef uint32_t irqflags_t;

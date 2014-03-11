@@ -45,7 +45,6 @@
 #define FLASHCALW_H_INCLUDED
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "compiler.h"
 
 /* These defines should be part of the auto-generated header files */
@@ -101,7 +100,7 @@ uint32_t flashcalw_get_wait_state(void);
 void flashcalw_set_wait_state(uint32_t wait_state);
 
 void flashcalw_set_flash_waitstate_and_readmode(uint32_t cpu_f_hz,
-		uint32_t ps_value, bool is_fwu_enabled);
+		uint32_t ps_value, unsigned char is_fwu_enabled);
 
 /*! \brief Alias on the flashcalw_set_flash_waitstate_and_readmode() function.
  *
@@ -112,17 +111,17 @@ void flashcalw_set_flash_waitstate_and_readmode(uint32_t cpu_f_hz,
 #define flash_set_bus_freq(cpu_f_hz, ps_value, is_fwu_enabled) \
 	flashcalw_set_flash_waitstate_and_readmode(cpu_f_hz, ps_value, is_fwu_enabled)
 
-bool flashcalw_is_ready_int_enabled(void);
+unsigned char flashcalw_is_ready_int_enabled(void);
 
-void flashcalw_enable_ready_int(bool enable);
+void flashcalw_enable_ready_int(unsigned char enable);
 
-bool flashcalw_is_lock_error_int_enabled(void);
+unsigned char flashcalw_is_lock_error_int_enabled(void);
 
-void flashcalw_enable_lock_error_int(bool enable);
+void flashcalw_enable_lock_error_int(unsigned char enable);
 
-bool flashcalw_is_prog_error_int_enabled(void);
+unsigned char flashcalw_is_prog_error_int_enabled(void);
 
-void flashcalw_enable_prog_error_int(bool enable);
+void flashcalw_enable_prog_error_int(unsigned char enable);
 
 //! @}
 
@@ -131,15 +130,15 @@ void flashcalw_enable_prog_error_int(bool enable);
  */
 //! @{
 
-bool flashcalw_is_ready(void);
+unsigned char flashcalw_is_ready(void);
 
 void flashcalw_default_wait_until_ready(void);
 
 extern void (*volatile flashcalw_wait_until_ready)(void);
 
-bool flashcalw_is_lock_error(void);
+unsigned char flashcalw_is_lock_error(void);
 
-bool flashcalw_is_programming_error(void);
+unsigned char flashcalw_is_programming_error(void);
 
 //! @}
 
@@ -172,19 +171,19 @@ void flashcalw_erase_all(void);
  */
 //! @{
 
-bool flashcalw_is_security_bit_active(void);
+unsigned char flashcalw_is_security_bit_active(void);
 
 void flashcalw_set_security_bit(void);
 
-bool flashcalw_is_page_region_locked(uint32_t page_number);
+unsigned char flashcalw_is_page_region_locked(uint32_t page_number);
 
-bool flashcalw_is_region_locked(uint32_t region);
+unsigned char flashcalw_is_region_locked(uint32_t region);
 
-void flashcalw_lock_page_region(int page_number, bool lock);
+void flashcalw_lock_page_region(int page_number, unsigned char lock);
 
-void flashcalw_lock_region(uint32_t region, bool lock);
+void flashcalw_lock_region(uint32_t region, unsigned char lock);
 
-void flashcalw_lock_all_regions(bool lock);
+void flashcalw_lock_all_regions(unsigned char lock);
 
 //! @}
 
@@ -193,7 +192,7 @@ void flashcalw_lock_all_regions(bool lock);
  */
 //! @{
 
-bool flashcalw_read_gp_fuse_bit(uint32_t gp_fuse_bit);
+unsigned char flashcalw_read_gp_fuse_bit(uint32_t gp_fuse_bit);
 
 uint64_t flashcalw_read_gp_fuse_bitfield(uint32_t pos, uint32_t width);
 
@@ -201,16 +200,16 @@ uint8_t flashcalw_read_gp_fuse_byte(uint32_t gp_fuse_byte);
 
 uint64_t flashcalw_read_all_gp_fuses(void);
 
-bool flashcalw_erase_gp_fuse_bit(uint32_t gp_fuse_bit, bool check);
+unsigned char flashcalw_erase_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char check);
 
-bool flashcalw_erase_gp_fuse_bitfield(uint32_t pos, uint32_t width,
-		bool check);
+unsigned char flashcalw_erase_gp_fuse_bitfield(uint32_t pos, uint32_t width,
+		unsigned char check);
 
-bool flashcalw_erase_gp_fuse_byte(uint32_t gp_fuse_byte, bool check);
+unsigned char flashcalw_erase_gp_fuse_byte(uint32_t gp_fuse_byte, unsigned char check);
 
-bool flashcalw_erase_all_gp_fuses(bool check);
+unsigned char flashcalw_erase_all_gp_fuses(unsigned char check);
 
-void flashcalw_write_gp_fuse_bit(uint32_t gp_fuse_bit, bool value);
+void flashcalw_write_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char value);
 
 void flashcalw_write_gp_fuse_bitfield(uint32_t pos, uint32_t width,
 		uint64_t value);
@@ -219,7 +218,7 @@ void flashcalw_write_gp_fuse_byte(uint32_t gp_fuse_byte, uint8_t value);
 
 void flashcalw_write_all_gp_fuses(uint64_t value);
 
-void flashcalw_set_gp_fuse_bit(uint32_t gp_fuse_bit, bool value);
+void flashcalw_set_gp_fuse_bit(uint32_t gp_fuse_bit, unsigned char value);
 
 void flashcalw_set_gp_fuse_bitfield(uint32_t pos, uint32_t width,
 		uint64_t value);
@@ -237,33 +236,33 @@ void flashcalw_set_all_gp_fuses(uint64_t value);
 
 void flashcalw_clear_page_buffer(void);
 
-bool flashcalw_is_page_erased(void);
+unsigned char flashcalw_is_page_erased(void);
 
-bool flashcalw_quick_page_read(int page_number);
+unsigned char flashcalw_quick_page_read(int page_number);
 
-bool flashcalw_erase_page(int page_number, bool check);
+unsigned char flashcalw_erase_page(int page_number, unsigned char check);
 
-bool flashcalw_erase_all_pages(bool check);
+unsigned char flashcalw_erase_all_pages(unsigned char check);
 
 void flashcalw_write_page(int page_number);
 
-bool flashcalw_quick_user_page_read(void);
+unsigned char flashcalw_quick_user_page_read(void);
 
-bool flashcalw_erase_user_page(bool check);
+unsigned char flashcalw_erase_user_page(unsigned char check);
 
 void flashcalw_write_user_page(void);
 
 volatile void *flashcalw_memset8(volatile void *dst, uint8_t src,
-		size_t nbytes, bool erase);
+		size_t nbytes, unsigned char erase);
 
 volatile void *flashcalw_memset16(volatile void *dst, uint16_t src,
-		size_t nbytes, bool erase);
+		size_t nbytes, unsigned char erase);
 
 volatile void *flashcalw_memset32(volatile void *dst, uint32_t src,
-		size_t nbytes, bool erase);
+		size_t nbytes, unsigned char erase);
 
 volatile void *flashcalw_memset64(volatile void *dst, uint64_t src,
-		size_t nbytes, bool erase);
+		size_t nbytes, unsigned char erase);
 
 /*! \brief Copies \a nbytes bytes to the flash destination pointed to by \a dst
  *         from the repeated \a src big-endian source pattern.
@@ -294,7 +293,7 @@ volatile void *flashcalw_memset64(volatile void *dst, uint64_t src,
 	TPASTE2(flashcalw_memset, src_width) ((dst), (src), (nbytes), (erase))
 
 volatile void *flashcalw_memcpy(volatile void *dst, const void *src,
-		size_t nbytes, bool erase);
+		size_t nbytes, unsigned char erase);
 
 //! @}
 

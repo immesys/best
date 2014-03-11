@@ -59,7 +59,7 @@ ast_callback_t ast_callback_pointer[AST_INTERRUPT_SOURCE_NUM];
  *
  * \return true If AST is enabled, else it will return false.
  */
-bool ast_is_enabled(Ast *ast)
+unsigned char ast_is_enabled(Ast *ast)
 {
 	while (ast_is_busy(ast)) {
 	}
@@ -249,7 +249,7 @@ uint32_t ast_set_config(Ast *ast, struct ast_config *ast_conf)
 uint32_t ast_configure_digital_tuner(Ast *ast,
 		uint32_t input_freq, uint32_t tuned_freq)
 {
-	bool add;
+	unsigned char add;
 	uint8_t value;
 	uint8_t exp;
 	uint32_t x, y, z;
@@ -330,7 +330,7 @@ uint32_t ast_configure_digital_tuner(Ast *ast,
  *
  * \return 1 if the initialization succeeds otherwise it will return 0.
  */
-void ast_init_digital_tuner(Ast *ast, bool add,
+void ast_init_digital_tuner(Ast *ast, unsigned char add,
 		uint8_t value, uint8_t exp)
 {
 	/* Wait until the ast CTRL register is up-to-date */
@@ -600,6 +600,7 @@ void ast_set_callback(Ast *ast, ast_interrupt_source_t source,
 	NVIC_EnableIRQ((IRQn_Type)irq_line);
 	ast_enable_interrupt(ast, source);
 }
+
 
 /**
  * \brief Interrupt handler for AST periodic.

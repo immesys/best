@@ -137,7 +137,7 @@ typedef enum ast_event_source {
 	AST_EVENT_OVF,
 } ast_event_source_t;
 
-struct ast_config {
+typedef struct ast_config {
 	/*
 	 * Mode: Calendar mode:
 	 * \ref AST_CALENDAR_MODE or
@@ -152,11 +152,11 @@ struct ast_config {
 	uint32_t counter;
 	/* Initial calendar Value. */
 	struct ast_calendar calendar;
-};
+} ast_config_t;
 
 typedef void (*ast_callback_t)(void);
 
-bool ast_is_enabled(Ast *ast);
+unsigned char ast_is_enabled(Ast *ast);
 
 void ast_enable(Ast *ast);
 void ast_disable(Ast *ast);
@@ -166,8 +166,8 @@ void ast_set_callback(Ast *ast, ast_interrupt_source_t source,
 		ast_callback_t callback, uint8_t irq_line, uint8_t irq_level);
 uint32_t ast_configure_digital_tuner(Ast *ast, uint32_t input_freq,
 		uint32_t tuned_freq);
-void ast_init_digital_tuner(Ast *ast, bool add, uint8_t value,
-		uint8_t exp);
+void ast_init_digital_tuner(Ast *ast, unsigned char add, uint8_t value,
+		uint8_t);
 void ast_disable_digital_tuner(Ast *ast);
 
 void ast_write_calendar_value(Ast *ast, struct ast_calendar ast_calendar);
@@ -195,7 +195,7 @@ static inline uint32_t ast_read_counter_value(Ast *ast)
  *
  * \return 1 If AST clock is busy, else it will return 0.
  */
-static inline bool ast_is_clkbusy(Ast *ast)
+static inline unsigned char ast_is_clkbusy(Ast *ast)
 {
 	return (ast->AST_SR & AST_SR_CLKBUSY) != 0;
 }
@@ -207,7 +207,7 @@ static inline bool ast_is_clkbusy(Ast *ast)
  *
  * \return 1 If AST is busy, else it will return 0.
  */
-static inline bool ast_is_busy(Ast *ast)
+static inline unsigned char ast_is_busy(Ast *ast)
 {
 	return (ast->AST_SR & AST_SR_BUSY) != 0;
 }
