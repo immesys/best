@@ -601,6 +601,7 @@ void ast_set_callback(Ast *ast, ast_interrupt_source_t source,
 	ast_enable_interrupt(ast, source);
 }
 
+#if 0
 
 /**
  * \brief Interrupt handler for AST periodic.
@@ -652,6 +653,7 @@ void AST_CLKREADY_Handler(void)
 }
 #endif
 
+#endif
 /**
  * \brief This function enables the AST Asynchronous wake-up.
  *
