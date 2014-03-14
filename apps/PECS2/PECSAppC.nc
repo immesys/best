@@ -3,14 +3,12 @@ configuration PECSAppC{}
 implementation {
   components MainC, PECS2C;
   components HplSam4GPIOC as pins;
-  components Alarm32khzC;
-  components HplASTP;
+  components new TimerMilliC();
   
-  HplASTP.Init <- MainC.SoftwareInit;
-   PECS2C.a -> Alarm32khzC;
- // NullC.HplASTP -> HplASTP.HplAST;
- // NullC.HplASTPi -> HplASTP.Init;
-  Alarm32khzC.HplAST -> HplASTP.HplAST;
+  components ScreenC;
+
+  PECS2C.scr -> ScreenC;
+  PECS2C.t -> TimerMilliC;
   pins.PB8 <-  PECS2C.p;
   MainC.Boot <-  PECS2C;
 }

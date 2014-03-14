@@ -9,8 +9,8 @@ module PECS2C
     {
         interface Boot;
         interface GeneralIO as p;
-        //interface Timer<T32khz> as t;
-        interface Alarm<T32khz, uint32_t> as a;
+        interface Timer<TMilli> as t;
+        interface Screen as scr;
     }
  
 }
@@ -20,24 +20,26 @@ implementation
 
   uint32_t iteration @C();
   uint32_t _dbg_fire_count @C() = 0;
-  async event void a.fired()
+  uint32_t left = 10;
+  event void t.fired()
   {
     _dbg_fire_count ++;
     call p.set();
     call p.clr();
     
     bl_printf("Fired count is: %u\n", _dbg_fire_count);
-    call a.start(1638);
+   
   }
+
 
   
   event void Boot.booted() {
+    call scr.start();
     bldebug_init();
     iteration = 0;
     call p.makeOutput();
-    call a.start(1638);
-   // call HplASTPi.init();
-  
+    call t.startPeriodic(500);
+    
   }
 }
 
