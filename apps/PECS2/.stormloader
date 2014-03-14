@@ -1,0 +1,7 @@
+[pack]
+maintainer = Michael Andersen <michael@steelcode.com>
+repository = https://github.com/SoftwareDefinedBuildings/best
+version = 1.0
+name = LessNull
+description = A fairly simple Storm-On-Tos testing application
+

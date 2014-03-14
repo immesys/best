@@ -86,7 +86,7 @@ static uint32_t gpio_nb_sources = 0;
  * \retval \c false Wrong parameters or exceeding maximum number of interrupt
  *                  sources has been defined.
  */
-bool gpio_set_pin_callback(ioport_pin_t pin, gpio_pin_callback_t callback,
+unsigned char gpio_set_pin_callback(ioport_pin_t pin, gpio_pin_callback_t callback,
 		uint8_t irq_level)
 {
 	int8_t i;

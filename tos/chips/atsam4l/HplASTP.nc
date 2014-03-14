@@ -2,6 +2,7 @@
 #include <ast.h>
 #include <bpm.h>
 #include <sleepmgr.h>
+#include <sysclk.h>
 
 module HplASTP
 {

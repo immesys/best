@@ -44,6 +44,8 @@
 #include "atsam4ltypes.h"
 #include <interrupt_sam_nvic.h>
 
+extern void sdebug(char* fmt, ... );
+extern void sdebug_init(void);
 #define DEBUGHANG() do{REG_GPIO_ODERS1 = (1<<8); while(1) {REG_GPIO_OVRT1 = (1<<8);} } while(0)
 
 #define ROUNDDOWN(a, n)                                         \

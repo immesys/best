@@ -83,7 +83,7 @@ typedef void (*gpio_pin_callback_t)(void);
  * @{
  */
 
-bool gpio_set_pin_callback(ioport_pin_t pin, gpio_pin_callback_t callback,
+unsigned char gpio_set_pin_callback(ioport_pin_t pin, gpio_pin_callback_t callback,
 		uint8_t irq_level);
 
 /**

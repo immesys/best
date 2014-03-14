@@ -99,9 +99,9 @@ typedef struct {
 	/** Select the size of the transfer (byte, half-word or word) */
 	uint32_t transfer_size;
 	/**  Enable (\c true) or disable (\c false) the transfer upon event trigger. */
-	bool etrig;
+	unsigned char etrig;
 	/** Ring buffer function */
-	bool ring;
+	unsigned char ring;
 } pdca_channel_config_t;
 
 typedef void (*pdca_callback_t) (enum pdca_channel_status status);
@@ -121,7 +121,7 @@ void pdca_channel_write_reload(pdca_channel_num_t pdca_ch_number,
 		volatile void *addr, uint32_t size);
 uint32_t pdca_channel_read_load_size(pdca_channel_num_t pdca_ch_number);
 uint32_t pdca_channel_read_reload_size(pdca_channel_num_t pdca_ch_number);
-bool pdca_channel_is_enabled(pdca_channel_num_t pdca_ch_number);
+unsigned char pdca_channel_is_enabled(pdca_channel_num_t pdca_ch_number);
 enum pdca_channel_status
 		pdca_get_channel_status(pdca_channel_num_t pdca_ch_number);
 void pdca_channel_disable(pdca_channel_num_t pdca_ch_number);

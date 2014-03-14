@@ -245,7 +245,7 @@ uint32_t pdca_channel_read_reload_size(pdca_channel_num_t pdca_ch_number)
  * \retval true PDCA channel is enabled
  * \retval false PDCA channel is disabled
  */
-bool pdca_channel_is_enabled(pdca_channel_num_t pdca_ch_number)
+unsigned char pdca_channel_is_enabled(pdca_channel_num_t pdca_ch_number)
 {
 	/* Get the correct channel pointer */
 	volatile PdcaChannel *pdca_channel =
