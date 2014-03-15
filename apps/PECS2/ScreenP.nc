@@ -32,58 +32,27 @@ implementation
     inline void set_RD() {gpC->GPIO_OVRS = (1<<9);}
     inline void clr_RD() {gpC->GPIO_OVRC = (1<<9);}
     
-    bool flip = FALSE;
-    task void test_iterate()
-    {
-        //set_RS();
-        //clr_RS();
-        if (flip)
-        {
-        /*
-        ioport_set_pin_level(PIN_PB11, 1);
-        ioport_set_pin_level(PIN_PA16, 1);
-        ioport_set_pin_level(PIN_PC09, 1);
-        ioport_set_pin_level(PIN_PB13, 1);
-        ioport_set_pin_level(PIN_PB08, 1);
-        */
-        //gpC->GPIO_OVRS = 0xFFFF0000;
-        *pardat = 0x5555; 
-        flip = FALSE;
-        }
-        else
-        {
-        /*
-        ioport_set_pin_level(PIN_PB11, 0);
-        ioport_set_pin_level(PIN_PA16, 0);
-        ioport_set_pin_level(PIN_PB13, 0);
-        ioport_set_pin_level(PIN_PC09, 0);
-        ioport_set_pin_level(PIN_PB08, 0);
-        */
-        //gpC->GPIO_OVRC = 0xFFFF0000;
-        *pardat = 0xAAAA;
-        flip = TRUE;
-        }
-        bl_printf("^");
-        post test_iterate();
-    }
+
     async command void Screen.start()
     {
-        post test_iterate();
+        
     }
     command error_t Init.init()
     {
         //Configure the parallel data ports as output
         gpC->GPIO_GPERS = 0xFFFF0000;
         gpC->GPIO_ODERS = 0xFFFF0000;
-        ioport_init();
         
         //Configure others
-        ioport_set_pin_dir(PIN_PA14, IOPORT_DIR_OUTPUT); //Supplementary power
-        ioport_set_pin_level(PIN_PA14, 1);  //See http://storm.pm/msg/SB-001
+    //    ioport_set_pin_dir(PIN_PA14, IOPORT_DIR_OUTPUT); //Supplementary power
+    //    ioport_set_pin_level(PIN_PA14, 1);  //See http://storm.pm/msg/SB-001
         ioport_set_pin_dir(PIN_PB11, IOPORT_DIR_OUTPUT); //LCD_RS
         ioport_set_pin_dir(PIN_PA16, IOPORT_DIR_OUTPUT); //LCD_WR
         ioport_set_pin_dir(PIN_PC09, IOPORT_DIR_OUTPUT); //LCD_RD
         ioport_set_pin_dir(PIN_PB13, IOPORT_DIR_OUTPUT); //LCD_RESET
+        
+        //Configure the flash asset DMA
+        
         
         return SUCCESS;
     }

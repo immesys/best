@@ -96,8 +96,12 @@ implementation
         spi_set_bits_per_transfer(SPI, 0, 8);
         spi_set_baudrate_div(SPI, 0, spi_calc_baudrate_div(FLASH_BAUD_RATE, sysclk_get_cpu_hz()));
         spi_configure_cs_behavior(SPI, 0, SPI_CS_KEEP_LOW);
-        spi_set_clock_polarity(SPI, 0, 1); //SPI mode 3
+        spi_set_clock_polarity(SPI, 0, 1); //SPI mode 3 for flash
         spi_set_clock_phase(SPI, 0, 0);
+        
+        spi_set_clock_polarity(SPI, 0, 0); //SPI mode 0 for radio
+        spi_set_clock_phase(SPI, 0, 1);
+        
         spi_enable(SPI);
     
         rdcmd_tx[0] = FLBYTE(0x1B, 0);

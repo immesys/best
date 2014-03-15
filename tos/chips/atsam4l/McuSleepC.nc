@@ -46,10 +46,10 @@ implementation{
 
   async command void McuSleep.sleep()
   {
-        uint8_t i;
+        volatile uint32_t i;
         __nesc_enable_interrupt();
        
-        for (i = 0; i < 10; i++);
+        for (i = 0; i < 1000; i++);
         __nesc_disable_interrupt();
   }
 

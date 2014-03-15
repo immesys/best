@@ -1,10 +1,11 @@
 
+#include "bldebug.h"
 
 module Alarm32khzC
 {
     provides
     {
-        interface Alarm<T32khz, uint32_t> as Alarm32khz;
+        interface Alarm<T32khz, uint32_t> as Alarm;
     }
     uses
     {
@@ -23,7 +24,7 @@ implementation
     *
     * @param dt Time until the alarm fires.
     */
-    async command void Alarm32khz.start(uint32_t dt)
+    async command void Alarm.start(uint32_t dt)
     {   
         call HplAST.stop();
         call HplAST.enableAlarmInterrupt();
@@ -36,7 +37,7 @@ implementation
     * already been signaled (even if your code has not yet started
     * executing).
     */
-    async command void Alarm32khz.stop()
+    async command void Alarm.stop()
     {
         call HplAST.stop();
     }
@@ -49,7 +50,7 @@ implementation
     *
     * @return TRUE if the alarm is still running.
     */
-    async command bool Alarm32khz.isRunning()
+    async command bool Alarm.isRunning()
     {
         return call HplAST.isRunning();
     }
@@ -67,18 +68,21 @@ implementation
     * @param t0 Base time for alarm.
     * @param dt Alarm time as offset from t0.
     */
-    async command void Alarm32khz.startAt(uint32_t t0, uint32_t dt)
+    async command void Alarm.startAt(uint32_t t0, uint32_t dt)
     {
+
         uint32_t t1 = t0 + dt;
         uint32_t n = call HplAST.getCounterValue();
         
+        //bl_printf("ASA %d %d %d - %d \n", t0, t1, dt, n);
+                
         call HplAST.stop();
-        if ( (t0 < n && n < t1) ||
+        if ( (t0 <= n && n < t1) ||
              (t1 < n && n < t0) )
         {//now is between the two events
             if (t1 < t0)
             {
-                signal Alarm32khz.fired();
+                signal Alarm.fired();
             }
             else
             {
@@ -87,9 +91,9 @@ implementation
         }
         else
         {
-            if (t0 < t1)
+            if (t0 <= t1)
             {
-                signal Alarm32khz.fired();
+                signal Alarm.fired();
             }
             else
             {
@@ -103,7 +107,7 @@ implementation
     * Return the current time.
     * @return Current time.
     */
-    async command uint32_t Alarm32khz.getNow()
+    async command uint32_t Alarm.getNow()
     {
         return call HplAST.getCounterValue();
     }
@@ -114,7 +118,7 @@ implementation
     * the previously running alarm was set to fire.
     * @return Alarm time.
     */
-    async command uint32_t Alarm32khz.getAlarm()
+    async command uint32_t Alarm.getAlarm()
     {
         return call HplAST.getAlarmValue();
     }
@@ -122,7 +126,9 @@ implementation
     async event void HplAST.alarmFired()
     {
         call HplAST.clearAlarmInterrupt();
-        signal Alarm32khz.fired();
+      //  bl_printf("AF %u\n", call Alarm.getNow());
+        signal Alarm.fired();
+
     }
     
     async event void HplAST.overflowFired()

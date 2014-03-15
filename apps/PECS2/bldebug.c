@@ -32,15 +32,6 @@ const sam_usart_opt_t usart_settings = {
 
 
 
-/**
- * \brief Interrupt handler for UART interrupt.
- */
-static void pdca_tranfer_done(enum pdca_channel_status status)
-{
-    
-}
-
-
 void bldebug_init()
 {
     ioport_set_pin_mode(PIN_PB10A_USART3_TXD, MUX_PB10A_USART3_TXD);
@@ -83,9 +74,12 @@ void bl_printf(char* fmt, ...)
 {
     va_list args;
     int cnt;
+    uint32_t tmt;
+    uint32_t d_stat;
+    volatile uint32_t d_copy;
     va_start(args, fmt);
-       
-    //while(pdca_get_channel_status(PDCA_TX_CHANNEL) != 0); 
+    
+    for (tmt = 1000000; tmt > 0 && pdca_get_channel_status(PDCA_TX_CHANNEL) != PDCA_CH_TRANSFER_COMPLETED; tmt--);
     cnt = vsnprintf(&txbuf[0], 511, fmt, args);
     pdca_channel_write_reload(PDCA_TX_CHANNEL, (void*) &txbuf[0], cnt);
   //  usart_putchar(USART3, 'X');

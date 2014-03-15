@@ -4,12 +4,15 @@
 #include <sleepmgr.h>
 #include <sysclk.h>
 
+#include "bldebug.h"
+
 module HplASTP
 {
     provides
     {
         interface HplAST;
         interface Init;
+        interface LocalTime<T32khz>;
     }
 }
 implementation
@@ -17,7 +20,10 @@ implementation
 
     void AST_ALARM_Handler() @C() @spontaneous()
     {
+
         signal HplAST.alarmFired();
+        
+    
     }
 
     void AST_OVF_Handler() @C() @spontaneous()
@@ -65,9 +71,13 @@ implementation
 	    AST->AST_CLOCK |= AST_CLOCK_CEN;
 	    block_ast_clkbusy();
 
-        //Configure counter mode with psel == 0
+        //Configure counter mode with psel == 5 (1ms)
+        //AST->AST_CR = (5) << AST_CR_PSEL_Pos;
+        
+        //Config counter with psel == 0 (16Khz)
+        //We will shift it around to make it look like 32khz
         AST->AST_CR = (0) << AST_CR_PSEL_Pos;
-
+        
         //Set counter to zero
         call HplAST.setCounterValue(0);
         call HplAST.clearAlarmInterrupt();
@@ -103,15 +113,25 @@ implementation
 
     async command uint32_t HplAST.getCounterValue()
     {
-        return AST->AST_CV;
+        uint32_t rv;
+        block_ast_busy();
+        //Pretend it's 32Khz
+        return (AST->AST_CV << 1);
     }
 
+    async command uint32_t LocalTime.get()
+    {
+        block_ast_busy();
+        return (AST->AST_CV << 1);
+    }
+    
     async command void HplAST.setCounterValue(uint32_t v)
     {
+        
         // Wait until write is ok
         block_ast_busy();
 
-        AST->AST_CV = v;
+        AST->AST_CV = (v >> 1);
 
         // Wait until write complete
         block_ast_busy();
@@ -119,10 +139,11 @@ implementation
 
     async command void HplAST.setAlarmValue(uint32_t v)
     {
+       // bl_printf("sav %u, ct %u\n",v, AST->AST_CV);
         // Wait until write is ok
         block_ast_busy();
 
-        AST->AST_AR0 = v;
+        AST->AST_AR0 = (v >> 1);
 
         // Wait until write complete
         block_ast_busy();
@@ -130,7 +151,8 @@ implementation
 
     async command uint32_t HplAST.getAlarmValue()
     {
-        return AST->AST_AR0;
+        block_ast_busy();
+        return (AST->AST_AR0 << 1);
     }
 
     async command void HplAST.enableAlarmInterrupt()

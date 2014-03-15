@@ -4,8 +4,9 @@
 # by ncc.
 
 push( @includes, qw(
-
   %T/platforms/storm
+  %T/platforms/storm/chips/rf233
+  %T/chips/rf233
   %T/chips/atsam4l
   %T/chips/atsam4l/gpio
   %T/chips/atsam4l/timer
