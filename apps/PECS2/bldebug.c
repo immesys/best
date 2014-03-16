@@ -64,12 +64,6 @@ void bldebug_init()
 }
 
 
-
-
-
-
-
-
 void bl_printf(char* fmt, ...)
 {
     va_list args;
@@ -85,4 +79,21 @@ void bl_printf(char* fmt, ...)
   //  usart_putchar(USART3, 'X');
     va_end(args);
 }
+
+
+void assert(uint8_t condition, const char* file, uint16_t line) 
+{
+    uint32_t newstate = 1;
+    if (!condition)
+    {
+        bl_printf("ASSERTION FAILED %s:%d\n",file, line);
+        asm volatile(
+		"msr primask, %0"
+		: // output
+		: "r" (newstate) // input
+	    );
+        while(1);
+    }
+}
+
 

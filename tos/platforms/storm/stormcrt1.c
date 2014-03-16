@@ -235,7 +235,7 @@ __attribute__ ((section(".vectors"))) interrupt_function_t interrupt_table[] =
 };
 
 
-
+extern void bldebug_init(void);
 void Reset_Handler(void)
 {
 	uint32_t *pSrc, *pDest;
@@ -269,6 +269,7 @@ void Reset_Handler(void)
 //	__libc_init_array();
 
 	/* Branch to main function */
+	bldebug_init();
 	main();
 
 	/* Infinite loop */

@@ -13,6 +13,7 @@ module PECS2C
         interface Screen as scr;
         interface SPIMux as mux;
         interface GpioCapture as IRQ;
+        interface Alarm<T32khz, uint32_t> as alm;
     }
  
 }
@@ -30,14 +31,15 @@ implementation
   event void t.fired()
   {
     _dbg_fire_count ++;
-    call p.set();
-    call p.clr();
+   // call p.set();
+  //  call p.clr();
     
    // bl_printf("First message\n");
   //  bl_printf("Second message\n");
    // bl_printf("Fired count is: %u\n", _dbg_fire_count);
    
   }
+  
   async event void IRQ.captured(uint16_t tm)
   {
      bl_printf("Cap %d\n", tm);
@@ -68,10 +70,15 @@ implementation
     post printbuffer();
     
   }
-
+    async event void alm.fired()
+    {
+        call alm.start(16384);
+        call p.set();
+        call p.clr();
+        bl_printf("Alarm fired\n");
+    }
   
   event void Boot.booted() {
-    bldebug_init();
     bl_printf("BooteD!\n");
     call scr.start();
     iteration = 0;
@@ -79,6 +86,7 @@ implementation
     call t.startPeriodic(16000);
    // post foo();
    post rearm();
+   call alm.start(16384);
   }
 }
 

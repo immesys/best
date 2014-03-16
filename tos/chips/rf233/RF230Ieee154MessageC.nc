@@ -32,11 +32,67 @@
  * Author: Miklos Maroti
  */
 
-configuration AssertC
+#include <RadioConfig.h>
+
+#ifdef TFRAMES_ENABLED
+#error "You cannot use Ieee154MessageC with TFRAMES_ENABLED defined"
+#endif
+
+configuration RF230Ieee154MessageC
 {
+	provides 
+	{
+		interface SplitControl;
+
+		interface Ieee154Send;
+		interface Receive as Ieee154Receive;
+		interface SendNotifier;
+
+		interface Ieee154Packet;
+		interface Packet;
+		interface Resource as SendResource[uint8_t clint];
+
+		interface PacketAcknowledgements;
+		interface LowPowerListening;
+		interface PacketLink;
+
+		interface RadioChannel;
+
+		interface PacketField<uint8_t> as PacketLinkQuality;
+		interface PacketField<uint8_t> as PacketTransmitPower;
+		interface PacketField<uint8_t> as PacketRSSI;
+
+		interface LocalTime<TRadio> as LocalTimeRadio;
+		interface PacketTimeStamp<TRadio, uint32_t> as PacketTimeStampRadio;
+		interface PacketTimeStamp<TMilli, uint32_t> as PacketTimeStampMilli;
+	}
 }
 
 implementation
 {
+	components RF230RadioC;
 
+	SplitControl = RF230RadioC;
+
+	Ieee154Send = RF230RadioC.Ieee154Send;
+	Ieee154Receive = RF230RadioC.Ieee154Receive;
+	SendNotifier = RF230RadioC.Ieee154Notifier;
+
+	Packet = RF230RadioC.PacketForIeee154Message;
+	Ieee154Packet = RF230RadioC;
+	SendResource = RF230RadioC;
+
+	PacketAcknowledgements = RF230RadioC;
+	LowPowerListening = RF230RadioC;
+	PacketLink = RF230RadioC;
+
+	RadioChannel = RF230RadioC;
+
+	PacketLinkQuality = RF230RadioC.PacketLinkQuality;
+	PacketTransmitPower = RF230RadioC.PacketTransmitPower;
+	PacketRSSI = RF230RadioC.PacketRSSI;
+
+	LocalTimeRadio = RF230RadioC;
+	PacketTimeStampMilli = RF230RadioC;
+	PacketTimeStampRadio = RF230RadioC;
 }

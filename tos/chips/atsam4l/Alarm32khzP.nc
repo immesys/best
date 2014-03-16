@@ -1,7 +1,7 @@
 
 #include "bldebug.h"
 
-module Alarm32khzC
+module Alarm32khzP
 {
     provides
     {

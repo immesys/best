@@ -32,11 +32,46 @@
  * Author: Miklos Maroti
  */
 
-configuration AssertC
+#include <RadioConfig.h>
+
+configuration HplRF230C
 {
+	provides
+	{
+		interface GeneralIO as SELN;
+		interface Resource as SpiResource;
+		interface FastSpiByte;
+
+		interface GeneralIO as SLP_TR;
+		interface GeneralIO as RSTN;
+
+		interface GpioCapture as IRQ;
+		interface Alarm<TRadio, uint32_t> as Alarm;
+		interface LocalTime<TRadio> as LocalTimeRadio;
+	}
 }
 
 implementation
 {
+    components SPIMuxC, TimingC, HplSam4GPIOC, RIRQP, RealMainP, HplRF230P;
 
+    SELN = SPIMuxC.radioSELN;
+    SpiResource = SPIMuxC.radioFSPIResource;
+    FastSPIByte = SPIMuxC.radioFSPI;
+    SLP_TR = HplSAM4GPIOC.PC14;
+    RSTN = HplSAM4GPIOC.PC15;
+    IRQ =  RIRQP.IRQ;
+    
+    RIRQP.clk -> TimingC.LocalTime;
+    RIRQP.PlatformInit <- RealMainP.PlatformInit;
+    
+	components HplRF230P;
+	IRQ = HplRF230P.IRQ;
+
+    HplRF230P.Init <- RealMainP.PlatformInit;
+    HplRF230P.PortSLP_TR <- HplSAM4GPIOC.PC14;
+    
+    Alarm = TimingC.Alarm32khz32[unique("storm.TimingC.Alarm")];
+    LocalTimeRadio = TimingC.LocalTime;
+    
 }

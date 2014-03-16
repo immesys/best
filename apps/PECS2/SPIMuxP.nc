@@ -7,6 +7,10 @@ module SPIMuxP
     {
         interface Init;
         interface SPIMux;
+        interface Resource as FlashResource;
+        interface Resource as RadioResource;
+        interface FastSpiByte as RadioFSPI;
+        interface GeneralIO as RadioSELN; 
     }
 }
 implementation
@@ -28,6 +32,18 @@ implementation
     uint16_t xfer_size;
     uint32_t rdcmd_tx [16];
     uint32_t rdcmd_rx [16];
+    
+    typedef enum
+    {
+        OWN_NONE,
+        OWN_FLASH,
+        OWN_RADIO
+    } owner_t;
+    
+    owner_t owner;
+    
+    bool radio_req;
+    bool flash_req;
     
     static pdca_channel_config_t pdca_tx_configs = {
         .addr   = (void *)0,      /* memory address              */
@@ -68,6 +84,39 @@ implementation
          signal SPIMux.flash_transfer_complete();
 
     }
+    
+    async command void RadioSELN.set()
+    {
+        ioport_set_pin_level(PIN_PC01, 1);
+    }
+    async command void RadioSELN.clr()
+    {
+        ioport_set_pin_level(PIN_PC01, 0);
+    }
+    async command void RadioSELN.toggle()
+    {
+        ioport_toggle_pin_level(PIN_PC01);
+    }
+    async command bool RadioSELN.get()
+    {
+        return ioport_get_pin_level(PIN_PC01);
+    }
+    async command void RadioSELN.makeInput()
+    {
+        //No you don't
+    }
+    async command bool RadioSELN.isInput()
+    {
+        return FALSE;
+    }
+    async command void RadioSELN.makeOutput()
+    {
+        //It is already
+    }
+    async command bool RadioSELN.isOutput()
+    {
+        return TRUE;
+    }
     command error_t Init.init()
     {
         uint16_t i;
@@ -80,8 +129,16 @@ implementation
         ioport_disable_pin(PIN_PC06A_SPI_SCK);
         ioport_set_pin_mode(PIN_PC03A_SPI_NPCS0, MUX_PC03A_SPI_NPCS0); //FL CS
         ioport_disable_pin(PIN_PC03A_SPI_NPCS0);
-        ioport_set_pin_mode(PIN_PC01A_SPI_NPCS3, MUX_PC01A_SPI_NPCS3); //RAD CS
-        ioport_disable_pin(PIN_PC01A_SPI_NPCS3);
+        
+        //For auto CS
+        //ioport_set_pin_mode(PIN_PC01A_SPI_NPCS3, MUX_PC01A_SPI_NPCS3); //RAD CS
+        //ioport_disable_pin(PIN_PC01A_SPI_NPCS3);
+        //Radio manages CS manually
+        ioport_set_pin_mode(PIN_PC01A_SPI_NPCS3, 0);
+        ioport_set_pin_dir(PIN_PC01, IOPORT_DIR_OUTPUT);
+        ioport_enable_pin(PIN_PC01);
+        ioport_set_pin_level(PIN_PC01, 1);
+        
         spi_enable_clock(SPI);
         spi_reset(SPI);
         spi_set_master_mode(SPI);
@@ -96,11 +153,12 @@ implementation
         spi_set_bits_per_transfer(SPI, 0, 8);
         spi_set_baudrate_div(SPI, 0, spi_calc_baudrate_div(FLASH_BAUD_RATE, sysclk_get_cpu_hz()));
         spi_configure_cs_behavior(SPI, 0, SPI_CS_KEEP_LOW);
+      //  spi_configure_cs_behavior(SPI, 3, SPI_CS_KEEP_LOW);
         spi_set_clock_polarity(SPI, 0, 1); //SPI mode 3 for flash
         spi_set_clock_phase(SPI, 0, 0);
         
-        spi_set_clock_polarity(SPI, 0, 0); //SPI mode 0 for radio
-        spi_set_clock_phase(SPI, 0, 1);
+        spi_set_clock_polarity(SPI, 3, 0); //SPI mode 0 for radio
+        spi_set_clock_phase(SPI, 3, 1);
         
         spi_enable(SPI);
     
@@ -109,6 +167,9 @@ implementation
         rdcmd_tx[5] = FLBYTE(0, 0);
         
         transfer_busy = FALSE;
+        radio_req = FALSE;
+        flash_req = FALSE;
+        
         pdca_enable(PDCA);
 
         pdca_channel_set_config(PDCA_SPI_TX, &pdca_tx_configs);
@@ -139,9 +200,167 @@ implementation
         {
             dummy_tx[i] = FLBYTE(0, 0);
         }
+        
+        owner = OWN_NONE;
+        
         return SUCCESS;
     }
 
+
+    default  event void RadioResource.granted(){}
+    default  event void FlashResource.granted(){}
+    /**
+	 * Starts a split-phase SPI data transfer with the given data.
+	 * A splitRead/splitReadWrite command must follow this command even 
+	 * if the result is unimportant.
+	 */
+	async command void RadioFSPI.splitWrite(uint8_t data)
+	{
+	    while(!spi_is_tx_ready(SPI));
+	    spi_write(SPI, data, spi_get_pcs(3), 0);
+	}
+
+	/**
+	 * Finishes the split-phase SPI data transfer by waiting till 
+	 * the write command comletes and returning the received data.
+	 */
+	async command uint8_t RadioFSPI.splitRead()
+	{
+	    while(!spi_is_rx_ready(SPI));
+	    return (uint8_t) spi_get(SPI);
+	}
+
+	/**
+	 * This command first reads the SPI register and then writes
+	 * there the new data, then returns. 
+	 */
+	async command uint8_t RadioFSPI.splitReadWrite(uint8_t data)
+	{
+	    while(!spi_is_rx_ready(SPI));
+	    return (uint8_t) spi_get(SPI);
+	    while(!spi_is_tx_ready(SPI));
+	    spi_write(SPI, data, spi_get_pcs(3), 0);
+	}
+
+	/**
+	 * This is the standard SpiByte.write command but a little
+	 * faster as we should not need to adjust the power state there.
+	 * (To be consistent, this command could have be named splitWriteRead).
+	 */
+	async command uint8_t RadioFSPI.write(uint8_t data)
+	{
+	    call RadioFSPI.splitWrite(data);
+	    return call RadioFSPI.splitRead();
+	}
+	
+    task void check_resources()
+    {
+        if (owner != OWN_NONE)
+            return;
+        if (radio_req)
+        {
+            owner = OWN_RADIO;
+            radio_req = FALSE;
+            signal RadioResource.granted();
+        }
+        else if (flash_req)
+        {
+            owner = OWN_FLASH;
+            flash_req = FALSE;
+            signal FlashResource.granted();
+        }
+    }
+    
+    async command error_t FlashResource.release()
+    {
+        if (owner == OWN_FLASH)
+        {
+            owner = OWN_NONE;
+            post check_resources();
+            return SUCCESS;
+        }
+        else
+        {
+            return FAIL;
+        }
+    }
+    async command error_t FlashResource.request()
+    {
+        if (flash_req)
+        {
+            return EBUSY;
+        }
+        else
+        {
+            flash_req = TRUE;
+            post check_resources();
+            return SUCCESS;
+        }
+    }
+    async command error_t FlashResource.immediateRequest()
+    {
+        if (owner == OWN_NONE)
+        {
+            flash_req = FALSE;
+            owner = OWN_FLASH;
+            return SUCCESS;
+        }
+        else
+        {
+            return FAIL;
+        }
+    }
+    async command bool FlashResource.isOwner()
+    {
+        return owner == OWN_FLASH;
+    }
+    
+    async command error_t RadioResource.release()
+    {
+        if (owner == OWN_RADIO)
+        {
+            owner = OWN_NONE;
+            ioport_set_pin_level(PIN_PC01, 1);
+            post check_resources();
+            return SUCCESS;
+        }
+        else
+        {
+            return FAIL;
+        }
+    }
+    async command error_t RadioResource.request()
+    {
+        if (radio_req)
+        {
+            return EBUSY;
+        }
+        else
+        {
+            radio_req = TRUE;
+            post check_resources();
+            return SUCCESS;
+        }
+    }
+    
+    async command error_t RadioResource.immediateRequest()
+    {
+        if (owner == OWN_NONE)
+        {
+            radio_req = FALSE;
+            owner = OWN_RADIO;
+            return SUCCESS;
+        }
+        else
+        {
+            return FAIL;
+        }
+    }
+    async command bool RadioResource.isOwner()
+    {
+        return owner == OWN_RADIO;
+    }
+    
     async command error_t SPIMux.initiate_flash_transfer(uint32_t* rx, uint16_t bufsize, uint32_t addr)
     {
         if (transfer_busy)

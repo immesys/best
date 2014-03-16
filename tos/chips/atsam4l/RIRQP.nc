@@ -37,6 +37,7 @@ implementation
         NVIC_SetPriority(EIC_5_IRQn, 1);
         NVIC_ClearPendingIRQ(EIC_5_IRQn);
         NVIC_EnableIRQ(EIC_5_IRQn);
+        return SUCCESS;
     }
     
     async command void IRQ.disable()

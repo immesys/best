@@ -113,7 +113,6 @@ implementation
 
     async command uint32_t HplAST.getCounterValue()
     {
-        uint32_t rv;
         block_ast_busy();
         //Pretend it's 32Khz
         return (AST->AST_CV << 1);
