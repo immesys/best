@@ -49,7 +49,8 @@ module RF230RadioP
 		interface SlottedCollisionConfig;
 		interface ActiveMessageConfig;
 		interface DummyConfig;
-
+        interface ShortAddressConfig;
+        
 #ifdef LOW_POWER_LISTENING
 		interface LowPowerListeningConfig;
 #endif
@@ -67,6 +68,19 @@ module RF230RadioP
 
 implementation
 {
+
+
+/*----------------- ShortAddressConfig-----------------*/
+
+    command void ShortAddressConfig.setShortAddr(uint16_t address)
+    {
+        signal ShortAddressConfig.setShortAddrDone(FAIL);
+    }
+    
+    default event void ShortAddressConfig.setShortAddrDone(error_t error)
+    {
+    }
+
 
 /*----------------- RF230DriverConfig -----------------*/
 

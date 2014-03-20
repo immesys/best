@@ -258,11 +258,22 @@ implementation
 		call BusyWait.wait(6);
 		call RSTN.set();
 
+        writeRegister(RF230_TRX_CTRL_0, RF230_TRX_CTRL_0_VALUE);
 		writeRegister(RF230_TRX_CTRL_0, RF230_TRX_CTRL_0_VALUE);
 		writeRegister(RF230_TRX_STATE, RF230_TRX_OFF);
 
 		call BusyWait.wait(510);
-
+		
+        //Enable antenna diversity
+       // writeRegister(0x0D, 0b1100);
+        writeRegister(0x0D, 0b0101);
+        //Set long address last byte
+        writeRegister(0x2b, 0x35);
+        //Turn on promiscuous mode
+        writeRegister(0x14, 2);
+        //Switch IRQ polarity to test pin
+        writeRegister(0x04, 0b00101110);
+        
 		writeRegister(RF230_IRQ_MASK, RF230_IRQ_TRX_UR | RF230_IRQ_TRX_END );
 		writeRegister(RF230_CCA_THRES, RF230_CCA_THRES_VALUE);
 		writeRegister(RF230_PHY_TX_PWR, RF230_TX_AUTO_CRC_ON | (RF230_DEF_RFPOWER & RF230_TX_PWR_MASK));
@@ -896,7 +907,8 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	async command void RadioPacket.setPayloadLength(message_t* msg, uint8_t length)
 	{
-		RADIO_ASSERT( 1 <= length && length <= 125 );
+		//RADIO_ASSERT( 1 <= length && length <= 125 );
+		RADIO_ASSERT(length <= 125 );
 		RADIO_ASSERT( call RadioPacket.headerLength(msg) + length + call RadioPacket.metadataLength(msg) <= sizeof(message_t) );
 
 		// we add the length of the CRC, which is automatically generated

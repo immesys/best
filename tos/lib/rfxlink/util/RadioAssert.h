@@ -35,15 +35,12 @@
 #ifndef __RADIOASSERT_H__
 #define __RADIOASSERT_H__
 
-#ifdef RADIO_DEBUG
 
-	void assert(bool condition, const char* file, uint16_t line);
-	#define RADIO_ASSERT(COND) assert(COND, __FILE__, __LINE__)
 
-#else
+	
+	#define RADIO_ASSERT(COND) blassert((COND), __FILE__, __LINE__)
+   // #define RADIO_ASSERT(x) blassert((x), "dsf", 3)
 
-	#define RADIO_ASSERT(COND) for(;0;)
-
-#endif
+void blassert(uint8_t conditio, const char* file, uint16_t line);
 
 #endif//__RADIOASSERT_H__

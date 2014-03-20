@@ -12,6 +12,9 @@ push( @includes, qw(
   %T/chips/atsam4l/timer
   %T/lib/timer
   %T/lib/power
+  %T/lib/rfxlink/layers
+  %T/lib/rfxlink/util
+  %T/lib/diagmsg
 ) );
 
 # The @opts list contains parameters that are passed to ncc.

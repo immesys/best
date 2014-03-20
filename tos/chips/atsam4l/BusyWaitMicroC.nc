@@ -1,5 +1,6 @@
-/*
- * Copyright (c) 2002-2007, Vanderbilt University
+//$Id: BusyWait.nc,v 1.5 2010-06-29 22:07:50 scipio Exp $
+
+/* Copyright (c) 2000-2003 The Regents of the University of California.  
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,19 +29,29 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Miklos Maroti
  */
 
-configuration DiagMsgC
+#include "Timer.h"
+
+module BusyWaitMicroC
 {
-	provides interface DiagMsg;
+    provides interface BusyWait<TMicro, uint16_t>;
+}
+implementation
+{
+    /**
+    * Busy wait for (at least) dt time units. Use sparingly, when the
+    * cost of using an Alarm or Timer would be too high.
+    * @param dt Time to busy wait for.
+    */
+    async command void BusyWait.wait(uint16_t dt)
+    {
+        uint16_t then = SysTick->VAL;
+        uint16_t now = SysTick->VAL;
+        while ((uint16_t)(then - now) < dt)
+        {
+            now = SysTick->VAL;
+        }
+    }
 }
 
-implementation 
-{
-
-components NoDiagMsgC;
-	DiagMsg = NoDiagMsgC;
-
-}

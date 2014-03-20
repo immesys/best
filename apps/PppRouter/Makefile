@@ -1,6 +1,6 @@
 COMPONENT=PppRouterC
 # PFLAGS += -DENABLE_SPI0_DMA
-#PFLAGS += -DCC2420_DEF_CHANNEL=21
+PFLAGS += -DCC2420_DEF_CHANNEL=26
 
 #DEFAULT_LOCAL_GROUP = 0xCA
 
@@ -23,6 +23,6 @@ PFLAGS += -DIN6_PREFIX=\"fec0::\"
 #PFLAGS += -DIN6_PREFIX=\"2a01:c911:0:212d::\"
 
 # derive short address from the dhcp address assignment, if possible
-PFLAGS += -DBLIP_DERIVE_SHORTADDRS
+#PFLAGS += -DBLIP_DERIVE_SHORTADDRS
 
 include $(MAKERULES)

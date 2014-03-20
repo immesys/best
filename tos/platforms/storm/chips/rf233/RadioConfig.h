@@ -35,9 +35,8 @@
 #ifndef __RADIOCONFIG_H__
 #define __RADIOCONFIG_H__
 
-#include <MicaTimer.h>
+#include <Timer.h>
 #include <RF230DriverLayer.h>
-#include <util/crc16.h>
 
 enum
 {
@@ -45,7 +44,8 @@ enum
 	 * This is the value of the TRX_CTRL_0 register
 	 * which configures the output pin currents and the CLKM clock
 	 */
-
+	RF230_TRX_CTRL_0_VALUE = 0,
+	
 	/**
 	 * This is the default value of the CCA_MODE field in the PHY_CC_CCA register
 	 * which is used to configure the default mode of the clear channel assesment
@@ -80,7 +80,8 @@ enum
  */
 inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
 {
-	return _crc_ccitt_update(crc, data);
+    return 0; //XTAG killed the crc
+	//return _crc_ccitt_update(crc, data);
 }
 
 /**
@@ -100,7 +101,7 @@ typedef uint32_t tradio_size;
 /**
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
-#define RADIO_ALARM_MILLI_EXP	4
+#define RADIO_ALARM_MILLI_EXP	5
 
 #define RF230_HWACK_SLOPPY_TIMESTAMP
 #define IEEE154FRAMES_ENABLED

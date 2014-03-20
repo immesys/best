@@ -44,8 +44,9 @@
  */
 
 #include <Tasklet.h>
-#include <RadioAssert.h>
 #include "RadioConfig.h"
+#include <RadioAssert.h>
+
 
 generic module RadioAlarmP()
 {

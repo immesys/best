@@ -13,6 +13,7 @@ module HplASTP
         interface HplAST;
         interface Init;
         interface LocalTime<T32khz>;
+        interface Counter<T32khz, uint32_t>;
     }
 }
 implementation
@@ -22,13 +23,12 @@ implementation
     {
 
         signal HplAST.alarmFired();
-        
-    
     }
 
     void AST_OVF_Handler() @C() @spontaneous()
     {
         signal HplAST.overflowFired();
+        signal Counter.overflow();
     }
 
     inline void block_ast_busy()
@@ -124,6 +124,12 @@ implementation
         return (AST->AST_CV << 1);
     }
     
+    async command uint32_t Counter.get()
+    {
+        block_ast_busy();
+        return (AST->AST_CV << 1);
+    }
+    
     async command void HplAST.setCounterValue(uint32_t v)
     {
         
@@ -173,6 +179,18 @@ implementation
         block_ast_busy();
     }
 
+    async command bool Counter.isOverflowPending()
+    {
+        block_ast_busy();
+        return (AST->AST_SR & 1) != 0;
+    }
+    async command void Counter.clearOverflow()
+    {
+        block_ast_busy();
+        AST->AST_SCR = AST_SCR_OVF;
+        block_ast_busy();
+    }
+    
     async command void HplAST.enableOverflowInterrupt()
     {
         block_ast_busy();

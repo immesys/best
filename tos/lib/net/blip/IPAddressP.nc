@@ -36,7 +36,7 @@ module IPAddressP {
     interface Ieee154Address;
   }
 } implementation {
-  bool m_valid_addr = FALSE, m_short_addr = FALSE;
+  bool m_valid_addr = FALSE, m_short_addr = TRUE;
   struct in6_addr m_addr;
 
   command bool IPAddress.getLLAddr(struct in6_addr *addr) {

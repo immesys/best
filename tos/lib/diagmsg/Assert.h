@@ -41,8 +41,8 @@
 
 #else
 
-	void assert(bool condition, const char* file, uint16_t line);
-	#define ASSERT(COND) assert(COND, __FILE__, __LINE__)
+	void blassert(bool condition, const char* file, uint16_t line);
+	#define ASSERT(COND) blassert(COND, __FILE__, __LINE__)
 
 #endif
 

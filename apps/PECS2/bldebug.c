@@ -80,8 +80,19 @@ void bl_printf(char* fmt, ...)
     va_end(args);
 }
 
+int lowlevel_putc(int c)
+{
+    usart_putchar(USART3, c);
+    return 1;
+}
 
-void assert(uint8_t condition, const char* file, uint16_t line) 
+void blspike()
+{
+    ioport_set_pin_level(PIN_PB08, 1);
+    ioport_set_pin_level(PIN_PB08, 1);
+    ioport_set_pin_level(PIN_PB08, 0);
+}
+void blassert(uint8_t condition, const char* file, uint16_t line) 
 {
     uint32_t newstate = 1;
     if (!condition)

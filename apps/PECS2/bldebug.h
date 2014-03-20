@@ -6,6 +6,7 @@
 
 void bldebug_init(void);
 void bl_printf(char* fmt, ...);
-
+void blspike(void);
+#define printfflush()
 #endif
 

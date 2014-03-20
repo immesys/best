@@ -1,5 +1,5 @@
 
-module HplRF230P
+module HplRF233P
 {
 	provides
 	{

@@ -188,7 +188,7 @@ void SENDINFO_DECR(struct send_info *si) {
     // ip_malloc_init needs to be in init, not booted, because
     // context for coap is initialised in init
     ip_malloc_init();
-
+    bl_printf("t4\n");
     call BlipStatistics.clear();
 
     /* set up our reconstruction cache */

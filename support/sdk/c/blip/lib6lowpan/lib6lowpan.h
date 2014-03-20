@@ -22,7 +22,7 @@
 #ifndef _LIB6LOWPAN_H_
 #define _LIB6LOWPAN_H_
 
-#define UNUSED
+//#define UNUSED
 
 #include <stdint.h>
 
@@ -131,7 +131,7 @@ inline uint8_t setFragDgramOffset(struct packed_lowmsg *msg, uint8_t size);
 /*
  * extern functions -- must be declared by app somewhere else
  */
-int lowpan_extern_match_context(struct in6_addr *addr, UNUSED uint8_t *ctx_id);
+int lowpan_extern_match_context(struct in6_addr *addr, uint8_t *ctx_id);
 int lowpan_extern_read_context(struct in6_addr *addr, int context);
 
 

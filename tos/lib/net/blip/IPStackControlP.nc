@@ -22,6 +22,7 @@ module IPStackControlP {
 
   command error_t SplitControl.start() {
     if (blip_started) return EALREADY;
+    bl_printf("t1\n");
     return call SubSplitControl.start();
   }
 

@@ -34,43 +34,10 @@
 
 module AssertP
 {
-	uses
-	{
-		interface DiagMsg;
-		interface Leds;
-	}
+
 }
 
 implementation
 {
-	void assert(bool condition, const char* file, uint16_t line) __attribute__((noinline)) @C() @spontaneous()
-	{
-		if( ! condition )
-		{
-#ifdef ASSERT_LEDON
-			call Leds.led0On();
-#endif
-
-			if( call DiagMsg.record() )
-			{
-				uint8_t del = 0;
-				uint8_t len = 0;
-
-				while( file[len] != 0 )
-				{
-					if( file[len] == '\\' || file[len] == '/' )
-						del = len + 1;
-
-					++len;
-				}
-
-				file += del;
-
-				call DiagMsg.str("assert");
-				call DiagMsg.str(file);
-				call DiagMsg.uint16(line);
-				call DiagMsg.send();
-			}
-		}
-	}
+	
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2002-2007, Vanderbilt University
- * All rights reserved.
+ * Copyright (c) 2008 The Regents of the University  of California.
+ * All rights reserved."
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -12,7 +12,7 @@
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
- * - Neither the name of the copyright holder nor the names of
+ * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
  *
@@ -29,18 +29,44 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Miklos Maroti
  */
 
-configuration DiagMsgC
-{
-	provides interface DiagMsg;
-}
 
-implementation 
-{
+/**
+ *
+ * @author Stephen Dawson-Haggerty
+ */
+ 
+configuration Ieee154MessageC  {
+  provides {
+    interface SplitControl;
 
-components NoDiagMsgC;
-	DiagMsg = NoDiagMsgC;
+    interface Resource as SendResource[uint8_t clientId];
+    interface Ieee154Send;
+    interface Receive as Ieee154Receive;
 
+    interface Ieee154Packet;
+    interface Packet;
+
+    interface PacketAcknowledgements;
+    interface LinkPacketMetadata;
+    interface LowPowerListening;
+    interface PacketLink;
+  }
+
+} implementation {
+    
+    components RF230Ieee154MessageC as Msg;
+
+  SplitControl = Msg;
+  SendResource = Msg;
+  Ieee154Send  = Msg;
+  Ieee154Receive = Msg;
+  Ieee154Packet = Msg;
+  Packet = Msg;
+  
+  PacketAcknowledgements = Msg;
+  LinkPacketMetadata = Msg;
+  LowPowerListening = Msg;
+  PacketLink = Msg;
 }

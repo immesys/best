@@ -53,23 +53,22 @@ configuration HplRF230C
 
 implementation
 {
-    components SPIMuxC, TimingC, HplSam4GPIOC, RIRQP, RealMainP, HplRF230P;
+    components SPIMuxC, TimingC, HplSam4GPIOC, RIRQP, RealMainP, HplRF233P;
 
     SELN = SPIMuxC.radioSELN;
     SpiResource = SPIMuxC.radioFSPIResource;
-    FastSPIByte = SPIMuxC.radioFSPI;
-    SLP_TR = HplSAM4GPIOC.PC14;
-    RSTN = HplSAM4GPIOC.PC15;
+    FastSpiByte = SPIMuxC.radioFSPI;
+    SLP_TR = HplSam4GPIOC.PC14;
+    RSTN = HplSam4GPIOC.PC15;
     IRQ =  RIRQP.IRQ;
     
     RIRQP.clk -> TimingC.LocalTime;
     RIRQP.PlatformInit <- RealMainP.PlatformInit;
-    
-	components HplRF230P;
-	IRQ = HplRF230P.IRQ;
 
-    HplRF230P.Init <- RealMainP.PlatformInit;
-    HplRF230P.PortSLP_TR <- HplSAM4GPIOC.PC14;
+	//IRQ = HplRF233P.IRQ;
+
+    HplRF233P.PlatformInit <- RealMainP.PlatformInit;
+    HplRF233P.PortSLP_TR -> HplSam4GPIOC.PC14;
     
     Alarm = TimingC.Alarm32khz32[unique("storm.TimingC.Alarm")];
     LocalTimeRadio = TimingC.LocalTime;

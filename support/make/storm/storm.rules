@@ -21,6 +21,7 @@ AMADDR = ActiveMessageAddressC\$$addr
 BUILDDIR ?= build/$(PLATFORM)
 MAIN_EXE = $(BUILDDIR)/main.elf
 MAIN_SDB = $(BUILDDIR)/main.sdb
+OLD_SDB = $(BUILDDIR)/cache.sdb
 
 INSTALL_BIN = $(MAIN_BIN).out$(if $(NODEID),-$(NODEID),)
 INCLUDE_DIRS ?= $(TOSDIR)/platforms/$(PLATFORM)
@@ -28,7 +29,7 @@ EXTRA_MODULES += $(TOSDIR)/platforms/$(PLATFORM)/stormcrt1.c
 EXTRA_MODULES += -L$(TOSDIR)/chips/atsam4l/cmsis/Lib/GCC/
 
 #OPTFLAGS ?= -O3 -g
-OPTFLAGS ?= -Os
+#OPTFLAGS ?= -Os
 CFLAGS += -mthumb -D__SAM4LC8C__ -D__ATSAM4LC8C__ -DARM_MATH_CM4=true  -fdata-sections 
 CFLAGS += -ffunction-sections -mlong-calls -g3 -mcpu=cortex-m4 -pipe -fno-strict-aliasing 
 CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections --param max-inline-insns-single=500
@@ -72,6 +73,8 @@ $(if $(PROGRAM),,$(call TOSMake_include,storm/$(DEFAULT_PROGRAM).extra))
 
 exe0: builddir $(BUILD_EXTRA_DEPS) FORCE
 	@echo "    compiling $(COMPONENT) to a $(PLATFORM) binary"
+	@touch $(MAIN_SDB)
+	cp $(MAIN_SDB) $(OLD_SDB)
 	$(NCC) -o $(MAIN_EXE) $(OPTFLAGS) $(PFLAGS) $(CFLAGS) $(WIRING_CHECK_FLAGS) $(COMPONENT).nc $(LIBS) $(LDFLAGS)
 ifdef WIRING_CHECK_FILE
 	@nescc-wiring $(WIRING_CHECK_FILE)
@@ -89,7 +92,7 @@ setid: FORCE
 
 program: sdb FORCE
 	@echo "    installing $(PLATFORM) binary using StormLoader"
-	@$(SLOAD) flash $(MAIN_SDB)
+	@$(SLOAD) -V flashdelta $(OLD_SDB) $(MAIN_SDB)
 
 
 	

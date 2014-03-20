@@ -13,7 +13,7 @@
 #include "printf.h"
 #include <lib6lowpan/iovec.h>
 #include <lib6lowpan/ip.h>
-
+#warning BLIP PRINTF ENABLED
 void printf_buf(uint8_t *buf, int len) {
   int i;
   for (i = 0; i < len; i++) {
@@ -76,7 +76,9 @@ int printf_ieee154addr(ieee154_addr_t *in) {
 #undef putchar
 
 /* disable all printfs by removing them in the preprocessor */
+#ifndef printf
 #define printf(fmt, args ...) ;
+#endif
 #define printfflush() ;
 #define printf_in6addr(a) ;
 #define printf_buf(buf, len) ;

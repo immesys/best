@@ -55,6 +55,11 @@ configuration RF230RadioC
 #endif
 
 #ifndef TFRAMES_ENABLED
+        interface BareSend;
+      //  interface BareReceive;
+        interface Packet as BarePacket;
+        interface ShortAddressConfig;
+        
 		interface Ieee154Send;
 		interface Receive as Ieee154Receive;
 		interface SendNotifier as Ieee154Notifier;
@@ -95,6 +100,13 @@ implementation
 
 	components RF230RadioP as RadioP;
 
+    BareSend = TinyosNetworkLayerC.Ieee154Send;
+ //   BareReceive = TinyosNetworkLayerC.Ieee154Receive;
+    ShortAddressConfig = RadioP;
+    components RF230BarePacketP as BarePacketP;
+    BarePacket = BarePacketP;
+    BarePacketP.RadioPacket -> RadioDriverLayerC;
+    
 #ifdef RADIO_DEBUG
 	components AssertC;
 #endif

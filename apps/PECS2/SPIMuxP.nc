@@ -20,7 +20,7 @@ implementation
     
     //Flash byte coding data, last transfer and PCS
     #define FLBYTE(x,lt) ((lt<<24) | 0xFE0000 | (x))
-    #define FLASH_BAUD_RATE 10000000
+    #define FLASH_BAUD_RATE 2000000
     #define FLASH_POSTCS_DELAY 2
     #define FLASH_IXF_DELAY 2
     
@@ -144,24 +144,27 @@ implementation
         spi_set_master_mode(SPI);
         spi_disable_mode_fault_detect(SPI);
         spi_disable_loopback(SPI);
-        spi_set_peripheral_chip_select_value(SPI, spi_get_pcs(0));
+      //  spi_set_peripheral_chip_select_value(SPI, spi_get_pcs(0));
         //spi_set_fixed_peripheral_select(SPI);
         spi_set_variable_peripheral_select(SPI);
         spi_disable_peripheral_select_decode(SPI);
         spi_set_delay_between_chip_select(SPI, 1);
         spi_set_transfer_delay(SPI, 0, FLASH_POSTCS_DELAY, FLASH_IXF_DELAY);
+        
         spi_set_bits_per_transfer(SPI, 0, 8);
         spi_set_baudrate_div(SPI, 0, spi_calc_baudrate_div(FLASH_BAUD_RATE, sysclk_get_cpu_hz()));
         spi_configure_cs_behavior(SPI, 0, SPI_CS_KEEP_LOW);
-      //  spi_configure_cs_behavior(SPI, 3, SPI_CS_KEEP_LOW);
         spi_set_clock_polarity(SPI, 0, 1); //SPI mode 3 for flash
         spi_set_clock_phase(SPI, 0, 0);
         
+        spi_set_bits_per_transfer(SPI, 3, 8);
+        spi_set_baudrate_div(SPI, 3, spi_calc_baudrate_div(FLASH_BAUD_RATE, sysclk_get_cpu_hz()));
+        spi_configure_cs_behavior(SPI, 3, SPI_CS_KEEP_LOW);
         spi_set_clock_polarity(SPI, 3, 0); //SPI mode 0 for radio
         spi_set_clock_phase(SPI, 3, 1);
         
         spi_enable(SPI);
-    
+    /*
         rdcmd_tx[0] = FLBYTE(0x1B, 0);
         rdcmd_tx[4] = FLBYTE(0, 0);
         rdcmd_tx[5] = FLBYTE(0, 0);
@@ -175,8 +178,7 @@ implementation
         pdca_channel_set_config(PDCA_SPI_TX, &pdca_tx_configs);
         pdca_channel_set_config(PDCA_SPI_RX, &pdca_rx_configs);
         
-     //   pdca_channel_disable(PDCA_SPI_TX);
-    //    pdca_channel_disable(PDCA_SPI_RX);
+
     
         atomic
         {
@@ -201,6 +203,7 @@ implementation
             dummy_tx[i] = FLBYTE(0, 0);
         }
         
+        */
         owner = OWN_NONE;
         
         return SUCCESS;
@@ -236,10 +239,12 @@ implementation
 	 */
 	async command uint8_t RadioFSPI.splitReadWrite(uint8_t data)
 	{
+	    uint8_t rv;
 	    while(!spi_is_rx_ready(SPI));
-	    return (uint8_t) spi_get(SPI);
+	    rv = (uint8_t) spi_get(SPI);
 	    while(!spi_is_tx_ready(SPI));
 	    spi_write(SPI, data, spi_get_pcs(3), 0);
+	    return rv;
 	}
 
 	/**
@@ -261,12 +266,16 @@ implementation
         {
             owner = OWN_RADIO;
             radio_req = FALSE;
+            pdca_channel_disable(PDCA_SPI_TX);
+            pdca_channel_disable(PDCA_SPI_RX);
             signal RadioResource.granted();
         }
         else if (flash_req)
         {
             owner = OWN_FLASH;
             flash_req = FALSE;
+            pdca_channel_enable(PDCA_SPI_TX);
+            pdca_channel_enable(PDCA_SPI_RX);
             signal FlashResource.granted();
         }
     }
@@ -331,6 +340,7 @@ implementation
     }
     async command error_t RadioResource.request()
     {
+        bl_printf("rrq\n");
         if (radio_req)
         {
             return EBUSY;
@@ -349,6 +359,8 @@ implementation
         {
             radio_req = FALSE;
             owner = OWN_RADIO;
+            pdca_channel_disable(PDCA_SPI_TX);
+            pdca_channel_disable(PDCA_SPI_RX);
             return SUCCESS;
         }
         else

@@ -21,7 +21,7 @@ implementation
         signal IRQ.captured((uint16_t) (call clk.get()));
     }
     
-    command error_t PlatformInit.init()
+    command error_t PlatformInit.init() @exactlyonce()
     {
         //The pin is PA20 (RIRQ)
         ioport_set_pin_mode(PIN_PA20C_EIC_EXTINT5, PINMUX_PA20C_EIC_EXTINT5);
