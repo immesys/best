@@ -50,8 +50,11 @@ configuration PlatformLedsC
 }
 implementation
 {
-    components NoPinC as pa, NoPinC as pb, NoPinC as pc;
-    Led0 <- pa;
-    Led1 <- pb;
-    Led2 <- pc;
+    components new NoPinC() as pa, new NoPinC() as pb, new NoPinC() as pc;
+    components NoInitC;
+    
+    Init -> NoInitC.Init;
+    Led0 = pa.GeneralIO;
+    Led1 = pb.GeneralIO;
+    Led2 = pc.GeneralIO;
 }

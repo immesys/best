@@ -44,6 +44,7 @@
 
 #include "icmp6.h"
 #include "blip_printf.h"
+#include <bldebug.h>
 
 module ICMPCoreP {
   provides {
@@ -61,10 +62,12 @@ module ICMPCoreP {
                      size_t len, 
                      struct ip6_metadata *meta) {
     struct ip6_hdr *hdr = iph;
+    struct ip6_hdr hdr2;
     struct ip6_packet reply;
     struct ip_iovec v;
     struct icmp6_hdr *req = (struct icmp6_hdr *)packet;
     uint16_t my_cksum, rx_cksum = ntohs(req->cksum);
+    uint8_t iln;
 
     // SDH : we can compute the checksum for all ICMP messages here
     // this, for instance, protects RPL and ND since they sits on top
@@ -73,7 +76,19 @@ module ICMPCoreP {
     v.iov_base = packet;
     v.iov_len  = len;
     v.iov_next = NULL;
+    bl_printf("Packet received, len %d contents:", len);
+    for(iln = 0; iln < len; iln++)
+    {
+        bl_printf("p[%d] = %d\n",iln, ((uint8_t*)packet)[iln]);
+    }
+    bl_printf("flush\n");
     my_cksum = msg_cksum(iph, &v, IANA_ICMP);
+    bl_printf("First cksum: 0x%x\n",my_cksum);
+    ((uint8_t*)packet)[10] = 0;
+    ((uint8_t*)packet)[11] = 0;
+    my_cksum = msg_cksum(&hdr2, &v, IANA_ICMP);
+    bl_printf("Second cksum: 0x%x\n",my_cksum);
+    bl_printf("flush\n");
     printf("ICMP: type: %i rx_cksum: 0x%x my_cksum: 0x%x\n", 
            req->type, rx_cksum, my_cksum);
     if (my_cksum != rx_cksum) {

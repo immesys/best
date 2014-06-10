@@ -10,12 +10,8 @@ implementation
    // components RIRQP;
    // components TimingC;
     components RealMainP;
-    components IPDispatchC, UdpC;
-    components IPStackC;
-    PECS2C.RadioControl -> IPStackC;
-    components new UdpSocketC() as sock;
-    PECS2C.sock -> sock;
-    components StaticIPAddressTosIdC;
+    
+    
 
  // components new Alarm32khz16C();
   //VirtualizeAlarmC.AlarmFrom -> Alarm32khz16C;
@@ -34,5 +30,19 @@ implementation
     
      components new TimerMilliC();
      PECS2C.t -> TimerMilliC;
+     
+     
+    components IPDispatchC, UdpC;
+    components IPStackC;
+    PECS2C.RadioControl -> IPStackC;
+    components new UdpSocketC() as sock;
+    PECS2C.sock -> sock;
+    components StaticIPAddressTosIdC;
+    components RPLRoutingC;
+    components UDPShellC;
+
+    // prints the routing table
+    components RouteCmdC;
+    
 }
 

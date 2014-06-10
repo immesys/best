@@ -674,7 +674,10 @@ implementation
 			}
 		}
 		else
+		{
+		    bl_printf("BAD LENGTH ON RX\n");
 			crc = 1;
+		}
 
 		call SELN.set();
 		state = STATE_RX_ON;
@@ -699,7 +702,13 @@ implementation
 
 		// signal only if it has passed the CRC check
 		if( crc == 0 )
+		{
 			rxMsg = signal RadioReceive.receive(rxMsg);
+		}
+		else
+		{
+		    bl_printf("Nosig RX (bad crc)\n");
+		}
 	}
 
 /*----------------- IRQ -----------------*/

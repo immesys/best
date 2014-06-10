@@ -80,6 +80,7 @@ enum
  */
 inline uint16_t RF230_CRCBYTE_COMMAND(uint16_t crc, uint8_t data)
 {
+    bl_printf("!!!!! CALLED BAD CRC FUNCTION !!!!!\n");
     return 0; //XTAG killed the crc
 	//return _crc_ccitt_update(crc, data);
 }

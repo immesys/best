@@ -177,7 +177,8 @@ implementation{
     struct dio_etx_t etx_value;
     struct dio_dodag_config_t dodag_config;
     uint16_t length;
-
+    uint16_t xlen;
+    
 #ifdef RPL_OF_MRHOF
     struct dio_body_t body;
 #endif
@@ -319,7 +320,14 @@ implementation{
 
     // call IPAddress.getGlobalAddr(&pkt.ip6_hdr.ip6_src);
     // memcpy(&pkt.ip6_hdr.ip6_src, &ADDR_MY_IP, 16);
-
+   
+    printf("XTAG!!\n");
+    iov_print(pkt.ip6_data);
+    printf("Xsrc: ");
+    printf_in6addr(&pkt.ip6_hdr.ip6_src);
+    printf("\nXdst: ");
+    printf_in6addr(&pkt.ip6_hdr.ip6_dst);
+    printf("\n");
     call IP_DIO.send(&pkt);
   }
 
@@ -352,7 +360,7 @@ implementation{
 
     // printf("RPL: \n >>>>>> TxDIS\n");
     // printf("RPL: >> sendDIS %d %lu \n", TOS_NODE_ID, ++countdis);
-
+    
     call IP_DIS.send(&pkt);
   }
 

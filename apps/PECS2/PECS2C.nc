@@ -68,7 +68,7 @@ struct sockaddr_in6 route_dest;
         foo[1] = 50;
         foo[2] = 89;
         route_dest.sin6_port = htons(7000);
-        inet_pton6("ff02::1", &route_dest.sin6_addr);
+        inet_pton6("fec0::150", &route_dest.sin6_addr);
         call sock.sendto(&route_dest, &foo, sizeof(foo));
 
     }

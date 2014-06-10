@@ -17,6 +17,7 @@ implementation
     {
         m_saddr = TOS_NODE_ID;
         m_panid = TOS_AM_GROUP;
+        bl_printf("PAN is 0x%x NODE is 0x%x",TOS_AM_GROUP, TOS_NODE_ID);
         return SUCCESS;
     }
 

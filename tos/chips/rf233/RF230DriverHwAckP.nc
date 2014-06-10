@@ -660,9 +660,10 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 	inline void downloadMessage()
 	{
-		uint8_t length;
+		volatile uint8_t length;
 		bool crcValid = FALSE;
-
+        volatile void* debugsym;
+        
 		call SELN.clr();
 		call FastSpiByte.write(RF230_CMD_FRAME_READ);
 
@@ -695,6 +696,9 @@ tasklet_async command uint8_t RadioState.getChannel()
 			}
 			while( --read != 0  );
 
+            debugsym = getHeader(rxMsg);
+            printf ("Header is at 0x%x\n", debugsym);
+
 			if( signal RadioReceive.header(rxMsg) )
 			{
 				while( length-- != 0 )
@@ -711,9 +715,19 @@ tasklet_async command uint8_t RadioState.getChannel()
 			else
 				call FastSpiByte.splitRead(); // finish the SPI transfer
 		}
+		else
+		{
+		    bl_printf("Invalid length RX %d\n", length);
+		    bl_printf("flush\n");
+		}
 
 		call SELN.set();
-
+        
+        if (!crcValid)
+        {
+            bl_printf("Invalid CRC\n");
+		    bl_printf("flush\n");
+        }
 		if( crcValid && call PacketTimeStamp.isValid(rxMsg) )
 		{
 			uint32_t time32 = call PacketTimeStamp.timestamp(rxMsg);
@@ -730,6 +744,11 @@ tasklet_async command uint8_t RadioState.getChannel()
 #endif
 
 			call PacketTimeStamp.set(rxMsg, time32);
+		}
+		else
+		{
+		    bl_printf("Invalid packet timestamp\n");
+		    bl_printf("flush\n");
 		}
 
 #ifdef RADIO_DEBUG_MESSAGES
@@ -753,7 +772,13 @@ tasklet_async command uint8_t RadioState.getChannel()
 
 		// signal only if it has passed the CRC check
 		if( crcValid )
+		{
 			rxMsg = signal RadioReceive.receive(rxMsg);
+		}
+		else
+		{
+		    bl_printf("Invalid CRC, nosig\n");
+		}
 	}
 
 /*----------------- IRQ -----------------*/
