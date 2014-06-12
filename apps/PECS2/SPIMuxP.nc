@@ -82,7 +82,6 @@ implementation
 
          transfer_busy = FALSE;
          signal SPIMux.flash_transfer_complete();
-
     }
     
     async command void RadioSELN.set()
