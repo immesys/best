@@ -18,8 +18,8 @@ module PECS2C
         interface Screen as scr;
         interface SPIMux as mux;
     
-        interface SplitControl as RadioControl;
-        interface UDP as sock;
+      //  interface SplitControl as RadioControl;
+      //  interface UDP as sock;
         
         interface Timer<TMilli> as t;
     }
@@ -38,7 +38,7 @@ implementation
     uint32_t left = 10;
   
 
-    event void RadioControl.startDone(error_t e)
+   /* event void RadioControl.startDone(error_t e)
     {
         bl_printf("Radio started, error: %d\n",e);
     }
@@ -50,7 +50,7 @@ implementation
                              uint16_t len, struct ip6_metadata *meta)
     {
         bl_printf("Got packet\n");
-    }   
+    }   */
 
 
 
@@ -60,51 +60,19 @@ implementation
 
 
     }
-struct sockaddr_in6 route_dest;
+
     event void t.fired()
     {
-     char foo [16];
-        foo[0] = 23;
-        foo[1] = 50;
-        foo[2] = 89;
-        route_dest.sin6_port = htons(7000);
-        inet_pton6("fec0::150", &route_dest.sin6_addr);
-        call sock.sendto(&route_dest, &foo, sizeof(foo));
 
     }
-    
-    task void bar()
-    {
-        char foo [16];
-        foo[0] = 23;
-        foo[1] = 50;
-        foo[2] = 89;
-        route_dest.sin6_port = htons(7000);
-        inet_pton6("ff02::1", &route_dest.sin6_addr);
 
-     //   call sock.sendto(&route_dest, &foo, sizeof(foo));
-     //   post bar();
-    }
     
     
     event void Boot.booted() 
     {
-        
-        
-        
-        bl_printf("BooteD!\n");
-        
-      //  call scr.start();
-        iteration = 0;
-        call p.makeOutput();
-        call RadioControl.start();
-        bl_printf("Radiocontrol started\n");
-        
-        
-        call sock.bind(7001);
-     //   post bar();
-        call t.startPeriodic(2000);
-    
+        bl_printf("system booted\n");
+        call scr.start();
+        bl_printf("return from screen start\n");
     }
 }
 
