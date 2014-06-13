@@ -36,7 +36,8 @@ implementation
     uint32_t iteration @C();
     uint32_t _dbg_fire_count @C() = 0;
     uint32_t left = 10;
-  
+
+    uint32_t arr [32];
 
    /* event void RadioControl.startDone(error_t e)
     {
@@ -57,8 +58,11 @@ implementation
 
     async event void mux.flash_transfer_complete()
     {
-
-
+        uint8_t starr [32];
+        uint8_t i;
+        for (i=0;i<32;i++) starr[i] = (uint8_t) arr[i];
+        starr[5] =0;
+        bl_printf("read complete, value: %s", starr);
     }
 
     event void t.fired()
@@ -66,13 +70,19 @@ implementation
 
     }
 
-    
+    async event void mux.flash_write_complete()
+    {
+
+    }
     
     event void Boot.booted() 
     {
+        uint32_t targetaddr = 0x0080000;
         bl_printf("system booted\n");
-        call scr.start();
-        bl_printf("return from screen start\n");
+
+        call mux.initiate_flash_transfer(&arr[0], 8, targetaddr);
+       // call scr.start();
+       // bl_printf("return from screen start\n");
     }
 }
 

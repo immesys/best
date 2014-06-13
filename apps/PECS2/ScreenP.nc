@@ -244,13 +244,14 @@ implementation
 
     async command void Screen.start()
     {
-
-        return;
-
         uint32_t i,j;
         uint16_t code;
         uint32_t a = (uint32_t) &gpC->GPIO_PVR;
         uint32_t b = (uint32_t) pardatr;
+
+        return;
+
+
 
         bl_printf("a: %x, b: %x\n",a,b);
                 //Configure the parallel data ports as output

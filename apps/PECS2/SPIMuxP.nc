@@ -32,7 +32,9 @@ implementation
     uint16_t xfer_size;
     uint32_t rdcmd_tx [16];
     uint32_t rdcmd_rx [16];
-    
+    uint32_t wrcmd_tx [16];
+    uint32_t wrcmd_rx [16];
+
     typedef enum
     {
         OWN_NONE,
@@ -163,7 +165,7 @@ implementation
         spi_set_clock_phase(SPI, 3, 1);
         
         spi_enable(SPI);
-    /*
+
         rdcmd_tx[0] = FLBYTE(0x1B, 0);
         rdcmd_tx[4] = FLBYTE(0, 0);
         rdcmd_tx[5] = FLBYTE(0, 0);
@@ -202,7 +204,7 @@ implementation
             dummy_tx[i] = FLBYTE(0, 0);
         }
         
-        */
+
         owner = OWN_NONE;
         
         return SUCCESS;
@@ -371,14 +373,19 @@ implementation
     {
         return owner == OWN_RADIO;
     }
-    
+
+    async command error_t SPIMux.initiate_flash_write(uint32_t* tx, uint16_t bufsize, uint32_t addr)
+    {
+        return SUCCESS;
+    }
     async command error_t SPIMux.initiate_flash_transfer(uint32_t* rx, uint16_t bufsize, uint32_t addr)
     {
         if (transfer_busy)
         {
             return EBUSY;
         }
-        
+
+
         rdcmd_tx[1] = FLBYTE(((uint8_t) (addr >> 16)),0);
         rdcmd_tx[2] = FLBYTE(((uint8_t) (addr >> 8)),0);
         rdcmd_tx[3] = FLBYTE(((uint8_t) (addr)),0);
