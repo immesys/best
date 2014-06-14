@@ -28,8 +28,8 @@ implementation
     GpioPort *gpB = (GpioPort*) GPIO_PORT_B_ADDR;
     GpioPort *gpA = (GpioPort*) GPIO_PORT_A_ADDR;
     
-    uint16_t *pardatw = (uint16_t*) (GPIO_PORT_C_ADDR + 0x52);
-    uint16_t *pardatr = (uint16_t*) (GPIO_PORT_C_ADDR + 0x62);
+   // uint16_t *pardatw = (uint16_t*) (GPIO_PORT_C_ADDR + 0x52);
+  //  uint16_t *pardatr = (uint16_t*) (GPIO_PORT_C_ADDR + 0x62);
     inline void set_RS() {gpB->GPIO_OVRS = (1<<11);}
     inline void clr_RS() {gpB->GPIO_OVRC = (1<<11);}
     inline void set_WR() {gpA->GPIO_OVRS = (1<<13);}
@@ -50,11 +50,18 @@ implementation
         gpC->GPIO_ODERC = 0xFFFF0000;
         gpC->GPIO_STERS = 0xFFFF0000;
     }
-
+    inline void wr_pardat(uint16_t v)
+    {
+        gpC->GPIO_OVR = (gpC->GPIO_OVR & 0xFFFF) | (((uint32_t) v) << 16);
+    }
+    inline uint16_t rd_pardat()
+    {
+        return (uint16_t) (gpC->GPIO_PVR >> 16);
+    }
     void dly()
     {
         volatile uint32_t i;
-        for (i=0;i<400000;i++)
+        for (i=0;i<300000;i++)
         {
              asm("nop");
         }
@@ -76,12 +83,13 @@ implementation
         sdly();
         set_RS();
         sdly();
-        *pardatw = val;
+        wr_pardat(val);
         clr_WR();
-        dly();
+        sdly();
         set_WR();
         sdly();
         set_CS();
+        sdly();
     }
     void lcdw_index(uint16_t idx)
     {
@@ -90,12 +98,13 @@ implementation
         sdly();
         clr_RS();
         sdly();
-        *pardatw = idx;
+        wr_pardat(idx);
         clr_WR();
-        dly();
+        sdly();
         set_WR();
         sdly();
         set_CS();
+        sdly();
     }
     void lcdw_reg(uint16_t addr, uint16_t val)
     {
@@ -107,13 +116,18 @@ implementation
         uint16_t rv;
         set_par_input();
         clr_CS();
+        sdly();
         set_RS();
+        sdly();
         set_WR();
+        sdly();
         clr_RD();
-        rv = *pardatr;
+        sdly();
+        rv = rd_pardat();
         set_RD();
+        sdly();
         set_CS();
-
+        sdly();
         return rv;
     }
     uint16_t lcdr_reg(uint16_t addr)
@@ -158,7 +172,7 @@ implementation
         {
             for (y = 0; y < LCD_Y; y++)
             {
-                lcdw_data(0xF0F3);
+                lcdw_data((x << 8) | y);
             }
         }
     }
@@ -185,24 +199,20 @@ implementation
 		lcdw_reg(0x0011,0x0007);
 		lcdw_reg(0x0012,0x0000);                                                                 
 		lcdw_reg(0x0013,0x0000);
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+
+		dly();  /* delay 50 ms */
 		lcdw_reg(0x0010,0x1590);   
 		lcdw_reg(0x0011,0x0227);
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+	    dly();  /* delay 50 ms */
 		lcdw_reg(0x0012,0x009c);                  
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+		dly();  /* delay 50 ms */
 		lcdw_reg(0x0013,0x1900);   
 		lcdw_reg(0x0029,0x0023);
 		lcdw_reg(0x002b,0x000e);
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+		dly();  /* delay 50 ms */
 		lcdw_reg(0x0020,0x0000);                                                            
 		lcdw_reg(0x0021,0x0000);           
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+		dly();  /* delay 50 ms */
 		lcdw_reg(0x0030,0x0007); 
 		lcdw_reg(0x0031,0x0707);   
 		lcdw_reg(0x0032,0x0006);
@@ -213,8 +223,7 @@ implementation
 		lcdw_reg(0x0039,0x0706);     
 		lcdw_reg(0x003c,0x0701);
 		lcdw_reg(0x003d,0x000f);
-		for(i=0;i<mplex;i++)
-		    dly();  /* delay 50 ms */
+		dly();  /* delay 50 ms */
 		lcdw_reg(0x0050,0x0000);        
 		lcdw_reg(0x0051,0x00ef);   
 		lcdw_reg(0x0052,0x0000);     
@@ -246,15 +255,7 @@ implementation
     {
         uint32_t i,j;
         uint16_t code;
-        uint32_t a = (uint32_t) &gpC->GPIO_PVR;
-        uint32_t b = (uint32_t) pardatr;
 
-        return;
-
-
-
-        bl_printf("a: %x, b: %x\n",a,b);
-                //Configure the parallel data ports as output
         set_par_output();
 
         //Configure others
@@ -277,31 +278,57 @@ implementation
       //  }
 
         bl_printf("resetting\n");
+        set_CS();
+        set_RS();
+        set_RD();
+        set_WR();
+        set_RST();
+
+        dly();
         clr_RST();
-
-            dly();
-
+        dly();
+        dly();
         set_RST();
         bl_printf("Waiting for 100ms\n");
 
+        dly();
+        dly();
 
-        for (i=0;i<10;i++)
-        {
-            for (j=0;j<10;j++)
-            {
-                bl_printf(".");
-                dly();
-            }
-        }
+        /*
+        clr_WR();
+        sdly();
+        set_WR();
+        sdly();
+        clr_RD();
+        sdly();
+        set_RD();
+        sdly();
+        clr_RS();
+        sdly();
+        set_RS();
+        sdly();
+        clr_CS();
+        sdly();
+        set_CS();
+        sdly();
+        clr_RST();
+        sdly();
+        set_RST();
+        sdly();
+        */
+
+        lcdw_index(0);
         bl_printf("done\n");
         code = lcdr_reg(0);
         bl_printf("screen dev code: %d\n", code);
         code = lcdr_reg(22);
         bl_printf("not code: %d\n", code);
+
         magic_incantation();
         bl_printf("Finished incantation\n");
         g_fill_rgb();
         bl_printf("done rgb\n");
+
     }
     
     

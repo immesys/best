@@ -25,6 +25,8 @@ implementation
     #define FLASH_IXF_DELAY 2
     
     bool transfer_busy;
+    bool transfer_is_write;
+
     typedef enum pdca_channel_status pdca_channel_status_t;
     
     #define MAX_XFER 2048
@@ -83,7 +85,14 @@ implementation
          pdca_channel_disable_interrupt(PDCA_SPI_RX, PDCA_IER_TRC);
 
          transfer_busy = FALSE;
-         signal SPIMux.flash_transfer_complete();
+         if (transfer_is_write)
+         {
+            signal SPIMux.flash_write_complete();
+         }
+         else
+         {
+            signal SPIMux.flash_transfer_complete();
+        }
     }
     
     async command void RadioSELN.set()
@@ -374,9 +383,38 @@ implementation
         return owner == OWN_RADIO;
     }
 
-    async command error_t SPIMux.initiate_flash_write(uint32_t* tx, uint16_t bufsize, uint32_t addr)
+    //Note that the way this is set up, it is not RMW, so the existing page contents are axed..
+    //make sure to take that into account when laying out your assets.
+    async command error_t SPIMux.initiate_flash_write(uint8_t* tx, uint8_t bufsize, uint32_t addr)
     {
+        uint8_t* p = tx;
+        uint8_t sz = bufsize;
+        uint16_t i;
+        for(i=0;sz > 0; sz--)
+        {
+            dummy_tx[i] = FLBYTE( (*p) , sz == 1);
+            p++;
+            i++;
+        }
+
+        wrcmd_tx[0] = FLBYTE(0x82, 0);
+        wrcmd_tx[1] = FLBYTE(((uint8_t) (addr >> 16)),0);
+        wrcmd_tx[2] = FLBYTE(((uint8_t) (addr >> 8)),0);
+        wrcmd_tx[3] = FLBYTE(((uint8_t) (addr)),0);
+
+        xfer_size = bufsize;
+
+        pdca_channel_write_load(PDCA_SPI_RX, (void *)wrcmd_rx, 4);
+        pdca_channel_write_load(PDCA_SPI_TX, (void *)wrcmd_tx, 4);
+        pdca_channel_write_reload(PDCA_SPI_RX, (void *)dummy_tx, bufsize);
+        pdca_channel_write_reload(PDCA_SPI_TX, (void *)dummy_tx, bufsize);
+
+        transfer_is_write = TRUE;
+        transfer_busy = TRUE;
+        pdca_channel_enable_interrupt(PDCA_SPI_RX, PDCA_IER_TRC);
+        pdca_channel_enable_interrupt(PDCA_SPI_TX, PDCA_IER_TRC);
         return SUCCESS;
+
     }
     async command error_t SPIMux.initiate_flash_transfer(uint32_t* rx, uint16_t bufsize, uint32_t addr)
     {
@@ -397,7 +435,8 @@ implementation
         pdca_channel_write_load(PDCA_SPI_TX, (void *)rdcmd_tx, 6);
         pdca_channel_write_reload(PDCA_SPI_RX, (void *)rx, bufsize);
         pdca_channel_write_reload(PDCA_SPI_TX, (void *)dummy_tx, bufsize);
-        
+
+        transfer_is_write = FALSE;
         transfer_busy = TRUE;
         pdca_channel_enable_interrupt(PDCA_SPI_RX, PDCA_IER_TRC);
         pdca_channel_enable_interrupt(PDCA_SPI_TX, PDCA_IER_TRC);

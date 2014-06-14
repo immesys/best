@@ -72,17 +72,20 @@ implementation
 
     async event void mux.flash_write_complete()
     {
-
+        bl_printf("SPI transfer complete!\n");
     }
     
     event void Boot.booted() 
     {
         uint32_t targetaddr = 0x0080000;
+        uint8_t* myarr = "herro world";
+
         bl_printf("system booted\n");
 
-        call mux.initiate_flash_transfer(&arr[0], 8, targetaddr);
-       // call scr.start();
-       // bl_printf("return from screen start\n");
+        //call mux.initiate_flash_write(&myarr[0], 12, targetaddr);
+        //call mux.initiate_flash_transfer(&arr[0], 8, targetaddr);
+        call scr.start();
+        bl_printf("return from screen start\n");
     }
 }
 
