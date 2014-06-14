@@ -22,6 +22,9 @@ implementation
     
     PECS2C.mux -> SPIMuxC;
     PECS2C.scr -> ScreenC;
+    ScreenC.SPIMux -> SPIMuxC;
+    ScreenC.FlashResource -> SPIMuxC.FlashResource;
+
   //  PECS2C.t -> TimingC.Timer32khz[unique("storm.TimingC.Timer")];
   //  PECS2C.alm -> TimingC.Alarm32khz32[unique("storm.TimingC.Alarm")];
     pins.PB8 <-  PECS2C.p;

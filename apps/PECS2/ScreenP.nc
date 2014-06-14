@@ -11,6 +11,11 @@ module ScreenP
         interface Init;
         interface Screen;
     }
+    uses
+    {
+        interface SPIMux;
+        interface Resource as FlashResource;
+    }
 }
 implementation
 {
@@ -27,7 +32,14 @@ implementation
     GpioPort *gpC = (GpioPort*) GPIO_PORT_C_ADDR;
     GpioPort *gpB = (GpioPort*) GPIO_PORT_B_ADDR;
     GpioPort *gpA = (GpioPort*) GPIO_PORT_A_ADDR;
-    
+
+    uint32_t _gfx_buffer [240*2]; //Max xfer is full line * 2
+    uint32_t _gfx_fbuffer [240*2]; //Because im lazy
+
+    uint32_t* gfx_buffer = &_gfx_buffer[0];
+    uint32_t* gfx_fbuffer = &_gfx_fbuffer[0];
+
+
    // uint16_t *pardatw = (uint16_t*) (GPIO_PORT_C_ADDR + 0x52);
   //  uint16_t *pardatr = (uint16_t*) (GPIO_PORT_C_ADDR + 0x62);
     inline void set_RS() {gpB->GPIO_OVRS = (1<<11);}
@@ -124,6 +136,7 @@ implementation
         rv = lcdr_data();
         return rv;
     }
+
     command error_t Init.init()
     {
         //Configure the parallel data ports as output
@@ -254,87 +267,107 @@ implementation
 
     async command void Screen.start()
     {
-        uint32_t i,j;
         uint16_t code;
-
         set_par_output();
 
         //Configure others
-    //    ioport_set_pin_dir(PIN_PA14, IOPORT_DIR_OUTPUT); //Supplementary power
-    //    ioport_set_pin_level(PIN_PA14, 1);  //See http://storm.pm/msg/SB-001
         ioport_set_pin_dir(PIN_PB11, IOPORT_DIR_OUTPUT); //LCD_RS
         ioport_set_pin_dir(PIN_PA13, IOPORT_DIR_OUTPUT); //LCD_WR
         ioport_set_pin_dir(PIN_PC09, IOPORT_DIR_OUTPUT); //LCD_RD
         ioport_set_pin_dir(PIN_PB13, IOPORT_DIR_OUTPUT); //LCD_RESET
         ioport_set_pin_dir(PIN_PC00, IOPORT_DIR_OUTPUT); //LCD_CS
 
-      //  set_par_input();
-      //  while(1)
-      //  {
-      //      i = gpC->GPIO_PVR;
-      //      bl_printf("a: %d\n", i);
-      //      i = *pardatr;
-      //      bl_printf("b: %d\n", i);
-
-      //  }
-
-        bl_printf("resetting\n");
         set_CS();
         set_RS();
         set_RD();
         set_WR();
         set_RST();
-
         dly();
         clr_RST();
         dly();
         dly();
         set_RST();
         bl_printf("Waiting for 100ms\n");
-
         dly();
         dly();
-
-        /*
-        clr_WR();
-        sdly();
-        set_WR();
-        sdly();
-        clr_RD();
-        sdly();
-        set_RD();
-        sdly();
-        clr_RS();
-        sdly();
-        set_RS();
-        sdly();
-        clr_CS();
-        sdly();
-        set_CS();
-        sdly();
-        clr_RST();
-        sdly();
-        set_RST();
-        sdly();
-        */
-
-        //lcdw_index(0);
-        bl_printf("done\n");
         code = lcdr_reg(0);
         bl_printf("screen dev code: %d\n", code);
-        code = lcdr_reg(22);
-        bl_printf("not code: %d\n", code);
-
         magic_incantation();
-        bl_printf("Finished incantation\n");
-        while(1)
-        {
-            g_fill_white();
-            g_fill_rgb();
-        }
-        bl_printf("done rgb\n");
+    }
+
+    bool screen_busy;
+    uint16_t bw_dst_sx, bw_dst_sy, bw_dst_width, bw_dst_height;
+    uint16_t bw_asset_sx, bw_asset_sy, bw_asset_width, bw_asset_height;
+    uint8_t bw_rows_done;
+    uint32_t bw_asset_address;
+
+    event void FlashResource.granted()
+    {
+        uint16_t to_xfer = bw_dst_width*2;
+        bl_printf("flash resource granted\n");
+        call SPIMux.initiate_flash_transfer(&gfx_buffer[0], bw_dst_width*2,
+            bw_asset_address + (uint32_t)bw_asset_sy*(uint32_t)bw_asset_width*2 + (uint32_t)bw_asset_sx*2);
 
     }
-    
-    
+    task void process_buffer()
+    {
+        uint32_t* tbuf = gfx_buffer;
+        uint32_t i;
+        gfx_buffer = gfx_fbuffer;
+        gfx_fbuffer = tbuf;
+        bl_printf("processing row %d\n", bw_rows_done);
+        bw_rows_done++;
+        if (bw_rows_done != bw_dst_height)
+        {
+            call SPIMux.initiate_flash_transfer(&gfx_buffer[0], bw_dst_width*2,
+                bw_asset_address + (uint32_t)(bw_asset_sy+bw_rows_done)*(uint32_t)bw_asset_width*2 + (uint32_t)bw_asset_sx*2);
+        }
+        lcd_set_cursor(bw_dst_sx, bw_dst_sy + bw_rows_done - 1);
+        lcdw_index(0x022);
+        for (i = 0; i < bw_dst_width*2; i+=2)
+        {
+            lcdw_data( ((gfx_fbuffer[i] & 0xFF) << 8) | (gfx_fbuffer[i+1] & 0xFF) );
+            //lcdw_data(0x5050);
+        }
+        if (bw_rows_done == bw_dst_height)
+        {
+            bl_printf("flash resource released\n");
+            call FlashResource.release();
+            screen_busy = FALSE;
+            signal Screen.blit_window_complete();
+        }
+    }
+    async event void SPIMux.flash_transfer_complete()
+    {
+        //Now we take our buffer, whose contents are identified by the bw_* variables, and stick
+        //it on the screen. First though, we shadow the vars and rerequest the next line if required
+        post process_buffer();
+    }
+
+    async event void SPIMux.flash_write_complete()
+    {
+        //Doesn't concern us
+    }
+    async error_t command Screen.blit_window(uint16_t dst_sx, uint16_t dst_sy, uint16_t dst_width, uint16_t dst_height,
+                    uint16_t asset_sx, uint16_t asset_sy, uint16_t asset_width, uint16_t asset_height,
+                    uint32_t asset_address)
+    {
+        if (screen_busy)
+        {
+            bl_printf("attempt to blit while busy");
+            return FAIL;
+        }
+        screen_busy = TRUE;
+        bw_dst_sx = dst_sx;
+        bw_dst_sy = dst_sy;
+        bw_dst_width = dst_width;
+        bw_dst_height = dst_height;
+        bw_asset_sx = asset_sx;
+        bw_asset_sy = asset_sy;
+        bw_asset_width = asset_width;
+        bw_asset_height = asset_height;
+        bw_asset_address = asset_address;
+        bw_rows_done = 0;
+        call FlashResource.request();
+    }
 }

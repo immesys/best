@@ -58,11 +58,13 @@ implementation
 
     async event void mux.flash_transfer_complete()
     {
+        /*
         uint8_t starr [32];
         uint8_t i;
         for (i=0;i<32;i++) starr[i] = (uint8_t) arr[i];
         starr[5] =0;
         bl_printf("read complete, value: %s", starr);
+        */
     }
 
     event void t.fired()
@@ -72,9 +74,13 @@ implementation
 
     async event void mux.flash_write_complete()
     {
-        bl_printf("SPI transfer complete!\n");
+        //bl_printf("SPI transfer complete!\n");
     }
-    
+
+    event void scr.blit_window_complete()
+    {
+        bl_printf("Blit complete\n");
+    }
     event void Boot.booted() 
     {
         uint32_t targetaddr = 0x0080000;
@@ -85,6 +91,8 @@ implementation
         //call mux.initiate_flash_write(&myarr[0], 12, targetaddr);
         //call mux.initiate_flash_transfer(&arr[0], 8, targetaddr);
         call scr.start();
+        call scr.blit_window(10, 10, 190, 50, 0, 0, 190, 50, 0x0090b00);
+
         bl_printf("return from screen start\n");
     }
 }
