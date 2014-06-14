@@ -70,7 +70,7 @@ implementation
     void sdly()
     {
         volatile uint32_t i;
-        for (i=0;i<4000;i++)
+        for (i=0;i<40;i++)
         {
              asm("nop");
         }
@@ -80,31 +80,23 @@ implementation
     {
         set_par_output();
         clr_CS();
-        sdly();
         set_RS();
-        sdly();
         wr_pardat(val);
         clr_WR();
-        sdly();
+        asm("nop");
         set_WR();
-        sdly();
         set_CS();
-        sdly();
     }
     void lcdw_index(uint16_t idx)
     {
         set_par_output();
         clr_CS();
-        sdly();
         clr_RS();
-        sdly();
         wr_pardat(idx);
         clr_WR();
-        sdly();
+        asm("nop");
         set_WR();
-        sdly();
         set_CS();
-        sdly();
     }
     void lcdw_reg(uint16_t addr, uint16_t val)
     {
@@ -116,18 +108,13 @@ implementation
         uint16_t rv;
         set_par_input();
         clr_CS();
-        sdly();
         set_RS();
-        sdly();
         set_WR();
-        sdly();
         clr_RD();
         sdly();
         rv = rd_pardat();
         set_RD();
-        sdly();
         set_CS();
-        sdly();
         return rv;
     }
     uint16_t lcdr_reg(uint16_t addr)
@@ -165,7 +152,6 @@ implementation
     {
         uint16_t x, y;
         lcd_set_cursor(0, 0);
-        bl_printf("set cursor\n");
         lcdw_index(0x022);
 
         for (x = 0; x < LCD_X; x++)
@@ -173,6 +159,21 @@ implementation
             for (y = 0; y < LCD_Y; y++)
             {
                 lcdw_data((x << 8) | y);
+            }
+        }
+    }
+
+    void g_fill_white()
+    {
+        uint16_t x, y;
+        lcd_set_cursor(0, 0);
+        lcdw_index(0x022);
+
+        for (x = 0; x < LCD_X; x++)
+        {
+            for (y = 0; y < LCD_Y; y++)
+            {
+                lcdw_data(0xFFFF);
             }
         }
     }
@@ -317,7 +318,7 @@ implementation
         sdly();
         */
 
-        lcdw_index(0);
+        //lcdw_index(0);
         bl_printf("done\n");
         code = lcdr_reg(0);
         bl_printf("screen dev code: %d\n", code);
@@ -326,7 +327,11 @@ implementation
 
         magic_incantation();
         bl_printf("Finished incantation\n");
-        g_fill_rgb();
+        while(1)
+        {
+            g_fill_white();
+            g_fill_rgb();
+        }
         bl_printf("done rgb\n");
 
     }
