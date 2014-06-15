@@ -10,8 +10,7 @@ implementation
    // components RIRQP;
    // components TimingC;
     components RealMainP;
-    
-    
+    components UIC;
 
  // components new Alarm32khz16C();
   //VirtualizeAlarmC.AlarmFrom -> Alarm32khz16C;

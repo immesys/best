@@ -86,7 +86,6 @@ implementation
         {
              asm("nop");
         }
-
     }
     void lcdw_data(uint16_t val)
     {

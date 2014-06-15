@@ -39,6 +39,7 @@ implementation
 
     uint32_t arr [32];
 
+
    /* event void RadioControl.startDone(error_t e)
     {
         bl_printf("Radio started, error: %d\n",e);
@@ -90,8 +91,8 @@ implementation
 
         //call mux.initiate_flash_write(&myarr[0], 12, targetaddr);
         //call mux.initiate_flash_transfer(&arr[0], 8, targetaddr);
-        call scr.start();
-        call scr.blit_window(10, 10, 190, 50, 0, 0, 190, 50, 0x0090b00);
+        //call scr.start();
+        //call scr.blit_window(10, 10, 190, 50, 0, 0, 190, 50, 0x0090b00);
 
         bl_printf("return from screen start\n");
     }
