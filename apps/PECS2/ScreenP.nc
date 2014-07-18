@@ -136,23 +136,7 @@ implementation
         return rv;
     }
 
-    command error_t Init.init()
-    {
-        //Configure the parallel data ports as output
-        gpC->GPIO_GPERS = 0xFFFF0000;
-        //gpC->GPIO_ODERS = 0xFFFF0000;
-        
-        //Configure others
-    //    ioport_set_pin_dir(PIN_PA14, IOPORT_DIR_OUTPUT); //Supplementary power
-    //    ioport_set_pin_level(PIN_PA14, 1);  //See http://storm.pm/msg/SB-001
-        ioport_set_pin_dir(PIN_PB11, IOPORT_DIR_OUTPUT); //LCD_RS
-        ioport_set_pin_dir(PIN_PA13, IOPORT_DIR_OUTPUT); //LCD_WR
-        ioport_set_pin_dir(PIN_PC09, IOPORT_DIR_OUTPUT); //LCD_RD
-        ioport_set_pin_dir(PIN_PB13, IOPORT_DIR_OUTPUT); //LCD_RESET
-        ioport_set_pin_dir(PIN_PC00, IOPORT_DIR_OUTPUT); //LCD_CS
 
-        return SUCCESS;
-    }
 
     void lcd_set_cursor(uint16_t x, uint16_t y)
     {
@@ -175,7 +159,7 @@ implementation
         }
     }
 
-    void g_fill_white()
+    async command void Screen.fill_color(uint16_t color)
     {
         uint16_t x, y;
         lcd_set_cursor(0, 0);
@@ -185,7 +169,21 @@ implementation
         {
             for (y = 0; y < LCD_Y; y++)
             {
-                lcdw_data(0xFFFF);
+                lcdw_data(color);
+            }
+        }
+    }
+
+    async command void Screen.fill_colorw(uint16_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+    {
+        uint16_t ix, iy;
+        for (iy = y; iy < y+h; iy++)
+        {
+            lcd_set_cursor(x, iy);
+            lcdw_index(0x022);
+            for (ix = 0; ix < w; ix++)
+            {
+                lcdw_data(color);
             }
         }
     }
@@ -266,32 +264,7 @@ implementation
 
     async command void Screen.start()
     {
-        uint16_t code;
-        set_par_output();
 
-        //Configure others
-        ioport_set_pin_dir(PIN_PB11, IOPORT_DIR_OUTPUT); //LCD_RS
-        ioport_set_pin_dir(PIN_PA13, IOPORT_DIR_OUTPUT); //LCD_WR
-        ioport_set_pin_dir(PIN_PC09, IOPORT_DIR_OUTPUT); //LCD_RD
-        ioport_set_pin_dir(PIN_PB13, IOPORT_DIR_OUTPUT); //LCD_RESET
-        ioport_set_pin_dir(PIN_PC00, IOPORT_DIR_OUTPUT); //LCD_CS
-
-        set_CS();
-        set_RS();
-        set_RD();
-        set_WR();
-        set_RST();
-        dly();
-        clr_RST();
-        dly();
-        dly();
-        set_RST();
-        bl_printf("Waiting for 100ms\n");
-        dly();
-        dly();
-        code = lcdr_reg(0);
-        bl_printf("screen dev code: %d\n", code);
-        magic_incantation();
     }
 
     bool screen_busy;
@@ -303,7 +276,7 @@ implementation
     event void FlashResource.granted()
     {
         uint16_t to_xfer = bw_dst_width*2;
-        bl_printf("flash resource granted\n");
+        bl_printf("screen flash resource granted\n");
         call SPIMux.initiate_flash_transfer(&gfx_buffer[0], bw_dst_width*2,
             bw_asset_address + (uint32_t)bw_asset_sy*(uint32_t)bw_asset_width*2 + (uint32_t)bw_asset_sx*2);
 
@@ -314,7 +287,7 @@ implementation
         uint32_t i;
         gfx_buffer = gfx_fbuffer;
         gfx_fbuffer = tbuf;
-        bl_printf("processing row %d\n", bw_rows_done);
+        //bl_printf("processing row %d\n", bw_rows_done);
         bw_rows_done++;
         if (bw_rows_done != bw_dst_height)
         {
@@ -330,7 +303,7 @@ implementation
         }
         if (bw_rows_done == bw_dst_height)
         {
-            bl_printf("flash resource released\n");
+            bl_printf("screen flash resource released\n");
             call FlashResource.release();
             screen_busy = FALSE;
             signal Screen.blit_window_complete();
@@ -347,14 +320,14 @@ implementation
     {
         //Doesn't concern us
     }
-    async error_t command Screen.blit_window(uint16_t dst_sx, uint16_t dst_sy, uint16_t dst_width, uint16_t dst_height,
+    async void command Screen.blit_window(uint16_t dst_sx, uint16_t dst_sy, uint16_t dst_width, uint16_t dst_height,
                     uint16_t asset_sx, uint16_t asset_sy, uint16_t asset_width, uint16_t asset_height,
                     uint32_t asset_address)
     {
         if (screen_busy)
         {
             bl_printf("attempt to blit while busy");
-            return FAIL;
+            return;
         }
         screen_busy = TRUE;
         bw_dst_sx = dst_sx;
@@ -369,4 +342,35 @@ implementation
         bw_rows_done = 0;
         call FlashResource.request();
     }
+
+    command error_t Init.init()
+    {
+        uint16_t code;
+
+        ioport_set_pin_dir(PIN_PB11, IOPORT_DIR_OUTPUT); //LCD_RS
+        ioport_set_pin_dir(PIN_PA13, IOPORT_DIR_OUTPUT); //LCD_WR
+        ioport_set_pin_dir(PIN_PC09, IOPORT_DIR_OUTPUT); //LCD_RD
+        ioport_set_pin_dir(PIN_PB13, IOPORT_DIR_OUTPUT); //LCD_RESET
+        ioport_set_pin_dir(PIN_PC00, IOPORT_DIR_OUTPUT); //LCD_CS
+
+        set_par_output();
+
+        set_CS();
+        set_RS();
+        set_RD();
+        set_WR();
+        set_RST();
+        dly();
+        clr_RST();
+        dly();
+        dly();
+        set_RST();
+        dly();
+        dly();
+        code = lcdr_reg(0);
+        magic_incantation();
+
+        return SUCCESS;
+    }
+
 }

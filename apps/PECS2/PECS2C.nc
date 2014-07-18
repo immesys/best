@@ -15,8 +15,8 @@ module PECS2C
         interface Boot;
         interface GeneralIO as p;
 
-        interface Screen as scr;
-        interface SPIMux as mux;
+     //   interface Screen as scr;
+     //   interface SPIMux as mux;
     
       //  interface SplitControl as RadioControl;
       //  interface UDP as sock;
@@ -57,23 +57,23 @@ implementation
 
 
 
-    async event void mux.flash_transfer_complete()
+/*    async event void mux.flash_transfer_complete()
     {
-        /*
+
         uint8_t starr [32];
         uint8_t i;
         for (i=0;i<32;i++) starr[i] = (uint8_t) arr[i];
         starr[5] =0;
         bl_printf("read complete, value: %s", starr);
-        */
-    }
+
+    } */
 
     event void t.fired()
     {
 
     }
 
-    async event void mux.flash_write_complete()
+  /*  async event void mux.flash_write_complete()
     {
         //bl_printf("SPI transfer complete!\n");
     }
@@ -81,11 +81,12 @@ implementation
     event void scr.blit_window_complete()
     {
         bl_printf("Blit complete\n");
-    }
-    event void Boot.booted() 
+    }*/
+    event void Boot.booted()
     {
-        uint32_t targetaddr = 0x0080000;
-        uint8_t* myarr = "herro world";
+        int rv;
+        GpioPort *gpA;
+    //    uint8_t* myarr = "herro world";
 
         bl_printf("system booted\n");
 
@@ -94,7 +95,8 @@ implementation
         //call scr.start();
         //call scr.blit_window(10, 10, 190, 50, 0, 0, 190, 50, 0x0090b00);
 
-        bl_printf("return from screen start\n");
+      //  bl_printf("return from screen start\n");
+
     }
 }
 

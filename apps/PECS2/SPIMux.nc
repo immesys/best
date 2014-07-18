@@ -7,5 +7,6 @@ interface SPIMux
 
     //These are for writes
     async command error_t initiate_flash_write(uint8_t* tx, uint8_t bufsize, uint32_t xaddr);
+    async command error_t initiate_flash_rmwrite(uint8_t* tx, uint8_t bufsize, uint32_t addr);
     async event void flash_write_complete();
 }

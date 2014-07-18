@@ -8,6 +8,7 @@ configuration TimingC
         interface Timer<TMilli> as TimerMilli [uint8_t id];
         interface LocalTime<T32khz> as LocalTime;
         interface LocalTime<TMilli> as LocalTimeMilli;
+        interface Counter<TMilli, uint32_t> as CounterMilli;
     }
 }
 implementation
@@ -29,6 +30,7 @@ implementation
     TimingP.Init <- RealMainP.PlatformInit;
     VAC.Init <- MainC.SoftwareInit;
     
+    CounterMilli = TransformAlarmCounterC;
   //  VirtualizeTimerC.Init <- MainC.SoftwareInit;
   //  AlarmToTimerC.Init <- MainC.SoftwareInit;
     

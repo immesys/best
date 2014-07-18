@@ -31,6 +31,7 @@ implementation
     
     #define MAX_XFER 2048
     uint32_t dummy_tx [MAX_XFER];
+    uint32_t dummy_tx2 [MAX_XFER];
     uint16_t xfer_size;
     uint32_t rdcmd_tx [16];
     uint32_t rdcmd_rx [16];
@@ -78,18 +79,17 @@ implementation
          pdca_channel_disable_interrupt(PDCA_SPI_TX, PDCA_IER_TRC);
          //Undo the last xfer flag on the final byte
          dummy_tx[xfer_size-1] = FLBYTE(0, 0);
-
+         if (transfer_is_write)
+         {
+            signal SPIMux.flash_write_complete();
+         }
     }
     void spi_rx_done (pdca_channel_status_t status) @C()
     {
          pdca_channel_disable_interrupt(PDCA_SPI_RX, PDCA_IER_TRC);
 
          transfer_busy = FALSE;
-         if (transfer_is_write)
-         {
-            signal SPIMux.flash_write_complete();
-         }
-         else
+         if (!transfer_is_write)
          {
             signal SPIMux.flash_transfer_complete();
         }
@@ -212,10 +212,11 @@ implementation
         {
             dummy_tx[i] = FLBYTE(0, 0);
         }
-        
-
         owner = OWN_NONE;
-        
+
+        //XTAG: this is a hack for the PECS having an arbiter on top of the flash
+        call FlashResource.immediateRequest();
+
         return SUCCESS;
     }
 
@@ -383,13 +384,15 @@ implementation
         return owner == OWN_RADIO;
     }
 
-    //Note that the way this is set up, it is not RMW, so the existing page contents are axed..
-    //make sure to take that into account when laying out your assets.
-    async command error_t SPIMux.initiate_flash_write(uint8_t* tx, uint8_t bufsize, uint32_t addr)
+
+    error_t _initiate_flash_write(uint8_t* tx, uint8_t bufsize, uint32_t addr)
     {
         uint8_t* p = tx;
         uint8_t sz = bufsize;
         uint16_t i;
+
+
+
         for(i=0;sz > 0; sz--)
         {
             dummy_tx[i] = FLBYTE( (*p) , sz == 1);
@@ -397,16 +400,21 @@ implementation
             i++;
         }
 
-        wrcmd_tx[0] = FLBYTE(0x82, 0);
+
         wrcmd_tx[1] = FLBYTE(((uint8_t) (addr >> 16)),0);
         wrcmd_tx[2] = FLBYTE(((uint8_t) (addr >> 8)),0);
         wrcmd_tx[3] = FLBYTE(((uint8_t) (addr)),0);
 
         xfer_size = bufsize;
+        dummy_tx[xfer_size-1] = FLBYTE(0,1);
+
+      //  transfer_busy = FALSE;
+      //  signal SPIMux.flash_write_complete();
+      //  return;
 
         pdca_channel_write_load(PDCA_SPI_RX, (void *)wrcmd_rx, 4);
         pdca_channel_write_load(PDCA_SPI_TX, (void *)wrcmd_tx, 4);
-        pdca_channel_write_reload(PDCA_SPI_RX, (void *)dummy_tx, bufsize);
+        pdca_channel_write_reload(PDCA_SPI_RX, (void *)dummy_tx2, bufsize);
         pdca_channel_write_reload(PDCA_SPI_TX, (void *)dummy_tx, bufsize);
 
         transfer_is_write = TRUE;
@@ -416,19 +424,37 @@ implementation
         return SUCCESS;
 
     }
+
+    //Note that the way this is set up, it is not RMW, so the existing page contents are axed..
+    //make sure to take that into account when laying out your assets.
+    async command error_t SPIMux.initiate_flash_write(uint8_t* tx, uint8_t bufsize, uint32_t addr)
+    {
+        wrcmd_tx[0] = FLBYTE(0x82, 0);
+        return _initiate_flash_write(tx, bufsize, addr);
+    }
+
+    //This is RMWrite, but still cannot cross page boundaries.
+    async command error_t SPIMux.initiate_flash_rmwrite(uint8_t* tx, uint8_t bufsize, uint32_t addr)
+    {
+        wrcmd_tx[0] = FLBYTE(0x58, 0);
+        return _initiate_flash_write(tx, bufsize, addr);
+    }
+
     async command error_t SPIMux.initiate_flash_transfer(uint32_t* rx, uint16_t bufsize, uint32_t addr)
     {
+        uint32_t i;
         if (transfer_busy)
         {
             return EBUSY;
         }
 
-
+        rdcmd_tx[0] = FLBYTE(0x1B, 0);
         rdcmd_tx[1] = FLBYTE(((uint8_t) (addr >> 16)),0);
         rdcmd_tx[2] = FLBYTE(((uint8_t) (addr >> 8)),0);
         rdcmd_tx[3] = FLBYTE(((uint8_t) (addr)),0);
         
         xfer_size = bufsize;
+        for (i=0;i<bufsize-1;i++)  dummy_tx[xfer_size] = FLBYTE(0,0);
         dummy_tx[xfer_size-1] = FLBYTE(0,1);
         
         pdca_channel_write_load(PDCA_SPI_RX, (void *)rdcmd_rx, 6);
