@@ -6,6 +6,7 @@ module FlashLoggerP
     uses interface SPIMux as flash_iface;
     uses interface Resource as flash_resource;
     uses interface Counter<TMilli, uint32_t> as counter;
+
     provides interface FlashLogger;
     provides interface Init;
     uses interface Boot;
@@ -13,7 +14,6 @@ module FlashLoggerP
 
 implementation
 {
-    uint32_t write_idx;
     uint32_t rxbuffer[sizeof(sense_metablock_t)];
     uint32_t upper_bits;
     sense_record_t next_write;
@@ -46,7 +46,6 @@ implementation
     {
         fl_state = st_idle;
         post fl_init();
-        write_idx = 0; //TODO replace this with metablock read
         upper_bits = 0;
     }
 
@@ -55,6 +54,16 @@ implementation
        // sense_record_t r;
        // r.type = FS_TYPE_REBOOT;
        // call FlashLogger.log_record(&r);
+
+    }
+
+    async command uint32_t FlashLogger.get_num_records()
+    {
+        return mblock.last_written_record;
+    }
+    async command void FlashLogger.query_record(uint32_t v)
+    {
+        //TODO
     }
     async command void FlashLogger.log_record(sense_record_t* r)
     {

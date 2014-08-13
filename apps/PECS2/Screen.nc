@@ -8,4 +8,6 @@ interface Screen
     async event void blit_window_complete();
     async command void fill_color(uint16_t color);
     async command void fill_colorw(uint16_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    async command void backlight(uint8_t ison);
+
 }

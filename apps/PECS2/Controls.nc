@@ -24,4 +24,6 @@ interface Controls
 
     async event void touch(uint16_t x, uint16_t y);
     async command void transition_active();
+
+    async event void ble_activity();
 }

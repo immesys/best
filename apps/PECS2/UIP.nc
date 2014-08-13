@@ -1,5 +1,6 @@
 #include "assets.h"
 
+
 module UIP
 {
     uses
@@ -8,6 +9,7 @@ module UIP
         interface Screen;
         interface Controls;
         interface Timer<TMilli> as tmr;
+        interface Timer<TMilli> as dimmert;
     }
     provides
     {
@@ -16,6 +18,10 @@ module UIP
 }
 implementation
 {
+
+    #define TIMEOUT_PERIOD 120000
+
+    uint8_t allow_dim = 0;
 
     enum
     {
@@ -84,6 +90,8 @@ implementation
     task void ui_paint_all_cu();
     task void ui_paint_all_cd();
 
+    uint8_t screen_dimmed = 0;
+
     enum
     {
         nt_cal1,
@@ -94,6 +102,9 @@ implementation
     command error_t Init.init() @exactlyonce()
     {
         activate_touch = 0;
+        screen_dimmed = 0;
+        call Screen.backlight(1);
+        call dimmert.startOneShot(TIMEOUT_PERIOD);
         return SUCCESS;
     }
     event void tmr.fired()
@@ -111,6 +122,19 @@ implementation
                 break;
         }
     }
+    event void dimmert.fired()
+    {
+        if (allow_dim)
+        {
+            screen_dimmed = 1;
+            call Screen.backlight(0);
+        }
+        else
+        {
+            call dimmert.startOneShot(TIMEOUT_PERIOD);
+        }
+    }
+
 
     task void ui_paint_all()
     {
@@ -279,6 +303,7 @@ implementation
     task void ui_cal_pt2()
     {
         ui_state = st_ui_cal_pt2;
+        call Screen.fill_colorw(0xFFFF, 35, 35, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H);
         call Screen.blit_window(35, 260, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H,
             0, 0, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H,
             ASSET_CROSSHAIR_ADDR);
@@ -287,13 +312,41 @@ implementation
     task void ui_cal_pt3()
     {
         ui_state = st_ui_cal_pt3;
+        call Screen.fill_colorw(0xFFFF, 35, 260, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H);
         call Screen.blit_window(180, 180, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H,
             0, 0, ASSET_CROSSHAIR_W, ASSET_CROSSHAIR_H,
             ASSET_CROSSHAIR_ADDR);
     }
 
+    async event void Controls.ble_activity()
+    {
+        if (screen_dimmed)
+        {
+            call Screen.backlight(1);
+            screen_dimmed = 0;
+            call dimmert.startOneShot(TIMEOUT_PERIOD);
+            return;
+        }
+        else
+        {
+            call dimmert.stop();
+            call dimmert.startOneShot(TIMEOUT_PERIOD);
+        }
+    }
     async event void Controls.touch(uint16_t x, uint16_t y)
     {
+        if (screen_dimmed)
+        {
+            call Screen.backlight(1);
+            screen_dimmed = 0;
+            call dimmert.startOneShot(TIMEOUT_PERIOD);
+            return;
+        }
+        else
+        {
+            call dimmert.stop();
+            call dimmert.startOneShot(TIMEOUT_PERIOD);
+        }
         bl_printf("Touch at %d, %d\n", x, y);
         if (y < 60) return;
         if (y > 260) return;
@@ -415,6 +468,7 @@ implementation
         ui_state = st_ui_idle;
         post ui_paint_all();
         activate_touch = 1;
+        allow_dim = 1;
     }
 
     event void Boot.booted()

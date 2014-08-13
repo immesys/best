@@ -33,7 +33,7 @@
 #define ASSET_CONNECT_Y         265
 
 #define ASSET_CALIBRATE_X       29
-#define ASSET_CALIBRATE_Y       127
+#define ASSET_CALIBRATE_Y       117
 //End handwritten
 
 #define ASSET_BLUE_0_W          22

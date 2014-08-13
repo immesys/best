@@ -174,6 +174,12 @@ implementation
         }
     }
 
+    async command void Screen.backlight(uint8_t ison)
+    {
+        ioport_set_pin_dir(PIN_PA10, IOPORT_DIR_OUTPUT);
+        ioport_set_pin_level(PIN_PA10, ison != 0);
+    }
+
     async command void Screen.fill_colorw(uint16_t color, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
     {
         uint16_t ix, iy;
@@ -276,7 +282,6 @@ implementation
     event void FlashResource.granted()
     {
         uint16_t to_xfer = bw_dst_width*2;
-        bl_printf("screen flash resource granted\n");
         call SPIMux.initiate_flash_transfer(&gfx_buffer[0], bw_dst_width*2,
             bw_asset_address + (uint32_t)bw_asset_sy*(uint32_t)bw_asset_width*2 + (uint32_t)bw_asset_sx*2);
 
@@ -303,7 +308,6 @@ implementation
         }
         if (bw_rows_done == bw_dst_height)
         {
-            bl_printf("screen flash resource released\n");
             call FlashResource.release();
             screen_busy = FALSE;
             signal Screen.blit_window_complete();

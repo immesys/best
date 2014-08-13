@@ -9,6 +9,8 @@
 #define	TP_CHY 	0xd0	/* channel X+ selection command*/
 
 
+#define PCSVER
+
 
 module ControlsP
 {
@@ -23,6 +25,7 @@ module ControlsP
         interface Timer<TMilli> as reportTmr;
         interface Timer<TMilli> as pwmTmr;
         interface FlashLogger;
+        interface BLE;
     }
 }
 implementation
@@ -123,6 +126,7 @@ implementation
 
     event void pwmTmr.fired()
     {
+        //uint32_t scaled_heat = heating*10)
         get_occupance();
         if (heat_on)
         {
@@ -148,6 +152,34 @@ implementation
         }
     }
 
+    void broadcast_ble_fan()
+    {
+         uint8_t pack[10];
+         uint8_t i;
+        pack[0] = 0x70;
+        pack[1] = 0xE5;
+        pack[2] = 0x12;
+        pack[3] = fan;
+        for (i=0;i<3;i++) pack[4+i] = 0;
+        pack[7] = 0xEB;
+        pack[8] = 0xC4;
+        call BLE.send_packet(&pack[0], 9);
+    }
+
+    void broadcast_ble_heat()
+    {
+        uint8_t pack[10];
+        uint8_t i;
+        pack[0] = 0x70;
+        pack[1] = 0xE5;
+        pack[2] = 0x11;
+        pack[3] = heating;
+        for (i=0;i<3;i++) pack[4+i] = 0;
+        pack[7] = 0xEB;
+        pack[8] = 0xC4;
+        call BLE.send_packet(&pack[0], 9);
+    }
+
     async command void Controls.fan_up()
     {
         if (fan == 100) return;
@@ -155,6 +187,7 @@ implementation
         report_cool_dirty = 1;
         set_fan();
         signal Controls.controls_changed();
+        broadcast_ble_fan();
     }
     async command void Controls.fan_down()
     {
@@ -163,6 +196,7 @@ implementation
         report_cool_dirty = 1;
         set_fan();
         signal Controls.controls_changed();
+        broadcast_ble_fan();
     }
     async command void Controls.heat_up()
     {
@@ -171,6 +205,7 @@ implementation
         report_heat_dirty = 1;
         set_heat();
         signal Controls.controls_changed();
+        broadcast_ble_heat();
     }
     async command void Controls.heat_down()
     {
@@ -179,6 +214,7 @@ implementation
         report_heat_dirty = 1;
         set_heat();
         signal Controls.controls_changed();
+        broadcast_ble_heat();
     }
 
     inline void set_SDA()
@@ -391,7 +427,7 @@ implementation
         tc_start(TC1, TC_CHANNEL_WAVEFORM);
 
         bl_printf("Ending PWM init\n");*/
-        #endif
+    #endif
     }
 
     command error_t Init.init()
@@ -459,7 +495,12 @@ implementation
 
         //Configure the heating strip control pins
         ioport_set_pin_dir(PIN_PA08, IOPORT_DIR_OUTPUT);
+        ioport_set_pin_mode(PIN_PA08,IOPORT_MODE_DRIVE_STRENGTH);
         ioport_set_pin_dir(PIN_PA12, IOPORT_DIR_OUTPUT);
+        ioport_set_pin_mode(PIN_PA12,IOPORT_MODE_DRIVE_STRENGTH);
+        ioport_set_pin_dir(PIN_PA14, IOPORT_DIR_OUTPUT); //power pin
+        ioport_set_pin_level(PIN_PA14, 1);
+
         ioport_set_pin_dir(PIN_PA06, IOPORT_DIR_INPUT);
 
         call pwmTmr.startOneShot(1000);
@@ -643,9 +684,7 @@ implementation
                         break;
                 }
             }
-
         }
-
         NVIC_ClearPendingIRQ(EIC_4_IRQn);
         REG_EIC_ICR = 1 << 4;
         REG_EIC_IER = 1 << 4;
@@ -653,8 +692,6 @@ implementation
 
     // START TOUCH STUFF
     // ------------------------------------------------------
-
-
 
     void tp_select()
     {
@@ -896,6 +933,45 @@ uint8_t tp_get_calibrated_point(uint16_t *x, uint16_t *y)
     *y = (uint16_t)yy;
     return 1;
 }
+
+    async event void BLE.command_received(uint8_t cmd, uint8_t* val)
+    {
+        uint8_t pack[20];
+        uint8_t i;
+        signal Controls.ble_activity();
+        bl_printf("Received command 0x%02x\n", cmd);
+        switch(cmd)
+        {
+            case 0x11: //HOT
+            {
+                if (val[0] > 100) val[0] = 100;
+                heating = val[0];
+                report_heat_dirty = 1;
+                set_heat();
+                signal Controls.controls_changed();
+                break;
+            }
+            case 0x12: //Cold
+            {
+                if (val[0] > 100) val[0] = 100;
+                fan = val[0];
+                report_cool_dirty = 1;
+                set_fan();
+                signal Controls.controls_changed();
+                break;
+            }
+            default:
+                return;
+        }
+        pack[0] = 0x70;
+        pack[1] = 0xE5;
+        pack[2] = cmd;
+        for (i=0;i<4;i++) pack[3+i] = val[i];
+        pack[7] = 0xEB;
+        pack[8] = 0xC4;
+        call BLE.send_packet(&pack[0], 9);
+    }
+
 
 #if 0
 void tp_calibrate(void)

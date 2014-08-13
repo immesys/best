@@ -19,4 +19,9 @@ implementation
     ControlsP.pwmTmr -> pwmt;
 
     ControlsP.FlashLogger = FlashLogger;
+
+    components LoggingUARTP0;
+
+    ControlsP.BLE -> LoggingUARTP0;
+    LoggingUARTP0.Init <- MainC;
 }
