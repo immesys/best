@@ -9,7 +9,7 @@
 #define	TP_CHY 	0xd0	/* channel X+ selection command*/
 
 
-#define PCSVER
+#define PCSVER 1
 
 
 module ControlsP
@@ -88,32 +88,46 @@ implementation
 
     void set_fan()
     {
-        //We have four levels of fan. May as well make them at quarters
+        uint32_t rb;
+
         get_occupance();
-        if (occupancy == 0)
-        {
-            expander_w(0x40, 0x0A, 0x00); //All off
-        }
-        else if (fan == 0)
-        {
-            expander_w(0x40, 0x0A, 0x00); //All off
-        }
-        else if (fan <= 25)
-        {
-            expander_w(0x40, 0x0A, 0b00100010); //FCA1 and FCB1
-        }
-        else if (fan <= 50)
-        {
-            expander_w(0x40, 0x0A, 0b00010001); //FCA0 and FCB0
-        }
-        else if (fan <= 75)
-        {
-            expander_w(0x40, 0x0A, 0b00110011); //FC*
-        }
-        else if (fan <= 100)
-        {
-            expander_w(0x40, 0x0A, 0b01110111); //FC*
-        }
+        #if PCSVER
+            #define p100 1120
+            if (occupancy == 0)
+            {
+                rb = 0;
+            } else {
+                rb = ((uint32_t) fan)*1120 / 100;
+            }
+            tc_write_rb(TC0, 2, rb);
+            tc_write_rb(TC1, 2, rb);
+        #else
+            //We have four levels of fan. May as well make them at quarters
+            if (occupancy == 0)
+            {
+                expander_w(0x40, 0x0A, 0x00); //All off
+            }
+            else if (fan == 0)
+            {
+                expander_w(0x40, 0x0A, 0x00); //All off
+            }
+            else if (fan <= 25)
+            {
+                expander_w(0x40, 0x0A, 0b00100010); //FCA1 and FCB1
+            }
+            else if (fan <= 50)
+            {
+                expander_w(0x40, 0x0A, 0b00010001); //FCA0 and FCB0
+            }
+            else if (fan <= 75)
+            {
+                expander_w(0x40, 0x0A, 0b00110011); //FC*
+            }
+            else if (fan <= 100)
+            {
+                expander_w(0x40, 0x0A, 0b01110111); //FC*
+            }
+        #endif
     }
 
     void set_heat()
@@ -387,7 +401,7 @@ implementation
 
     void pwm_init()
     {
-        uint32_t ra, rc;
+        uint32_t ra, rb, rc;
 
         bl_printf("Starting PWM init\n");
 
@@ -427,6 +441,50 @@ implementation
         tc_start(TC1, TC_CHANNEL_WAVEFORM);
 
         bl_printf("Ending PWM init\n");*/
+    #endif
+
+
+    #if PCSVER
+
+        //Configure FCA PB12, FCB PC01
+        ioport_set_pin_mode(PIN_PB12D_TC0_B2, MUX_PB12D_TC0_B2);
+	    ioport_disable_pin(PIN_PB12D_TC0_B2);
+        sysclk_enable_peripheral_clock(TC0);
+        tc_init(TC0, 2,
+                /* Waveform Clock Selection */
+                TC_CMR_TCCLKS_TIMER_CLOCK2
+                | TC_CMR_WAVE /* Waveform mode is enabled */
+                | TC_CMR_BCPB_SET /* RA Compare Effect: set */
+                | TC_CMR_BCPC_CLEAR /* RC Compare Effect: clear */
+                | TC_CMR_CPCTRG /* UP mode with automatic trigger on RC Compare */
+                | TC_CMR_EEVT_XC0_OUTPUT
+            );
+        rc = 1120;
+        rb = 600;
+        tc_write_rc(TC0, 2, rc);
+        tc_write_rb(TC0, 2, rb);
+
+        tc_start(TC0, 2);
+
+        ioport_set_pin_mode(PIN_PC01D_TC1_B0, MUX_PC01D_TC1_B0);
+	    ioport_disable_pin(PIN_PC01D_TC1_B0);
+        sysclk_enable_peripheral_clock(TC1);
+        tc_init(TC1, 2,
+                /* Waveform Clock Selection */
+                TC_CMR_TCCLKS_TIMER_CLOCK2
+                | TC_CMR_WAVE /* Waveform mode is enabled */
+                | TC_CMR_BCPB_SET /* RA Compare Effect: set */
+                | TC_CMR_BCPC_CLEAR /* RC Compare Effect: clear */
+                | TC_CMR_CPCTRG /* UP mode with automatic trigger on RC Compare */
+                | TC_CMR_EEVT_XC0_OUTPUT
+            );
+        rc = 1120;
+        rb = 0;
+        tc_write_rc(TC1, 2, rc);
+        tc_write_rb(TC1, 2, rb);
+
+        tc_start(TC1, 2);
+
     #endif
     }
 
