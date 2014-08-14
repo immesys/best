@@ -20,8 +20,8 @@ implementation
 
     ControlsP.FlashLogger = FlashLogger;
 
-    components LoggingUARTP0;
+    components LoggingUARTP0 as luartp;
 
-    ControlsP.BLE -> LoggingUARTP0;
-    LoggingUARTP0.Init <- MainC;
+    ControlsP.BLE -> luartp;
+    luartp.Init <- MainC;
 }

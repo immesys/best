@@ -9,8 +9,8 @@
 
 
 
-//Logging is connected to USART 1. RX is PB4, TX is PB5
-module LoggingUARTP
+//Logging is connected to USART 0. RX is PB14, TX is PB15
+module LoggingUARTP0
 {
     provides interface BLE;
     provides interface Init;
@@ -23,7 +23,7 @@ implementation
 /* PDCA channel options */
 static pdca_channel_config_t pdca_tx_configs = {
     .addr   = (void *)0,            /* memory address              */
-    .pid    = 19,                       //USART1_TX
+    .pid    = 18,                       //USART1_TX
     .size   = 0,                         /* transfer counter            */
     .r_addr = 0,                        /* next memory address         */
     .r_size = 0,                        /* next transfer counter       */
@@ -36,7 +36,7 @@ static pdca_channel_config_t pdca_tx_configs = {
 /* PDCA channel options */
 static pdca_channel_config_t pdca_rx_configs = {
     .addr   = (void *)0,            /* memory address              */
-    .pid    = 1,                       //USART1_RX
+    .pid    = 0,                       //USART1_RX
     .size   = 0,                         /* transfer counter            */
     .r_addr = 0,                        /* next memory address         */
     .r_size = 0,                        /* next transfer counter       */
@@ -54,8 +54,8 @@ static const sam_usart_opt_t usart_settings = {
  US_MR_CHMODE_NORMAL
 };
 
-#define U1PDCA_TX 3
-#define U1PDCA_RX 4
+#define U0PDCA_TX 3
+#define U0PDCA_RX 4
 
     typedef enum pdca_channel_status pdca_channel_status_t;
 
@@ -82,10 +82,10 @@ static const sam_usart_opt_t usart_settings = {
     uint8_t txbuf[21];
     uint8_t txbusy;
 
-    void USART1_Handler(void) @C() @spontaneous()
+    void USART0_Handler(void) @C() @spontaneous()
     {
-        uint8_t ch = USART1->US_RHR;
-        NVIC_ClearPendingIRQ(USART1_IRQn);
+        uint8_t ch = USART0->US_RHR;
+        NVIC_ClearPendingIRQ(USART0_IRQn);
         bl_printf("rx: %02x\n",ch);
         switch(command_state)
         {
@@ -148,29 +148,29 @@ static const sam_usart_opt_t usart_settings = {
         }
     }
 
-    void u1pdca_tx_done (pdca_channel_status_t status) @C()
+    void u0pdca_tx_done (pdca_channel_status_t status) @C()
     {
-        pdca_channel_disable_interrupt(U1PDCA_TX, PDCA_IER_TRC);
+        pdca_channel_disable_interrupt(U0PDCA_TX, PDCA_IER_TRC);
         txbusy = 0;
     }
 
    /* void u1pdca_rx_done (pdca_channel_status_t status) @C()
     {
-         pdca_channel_disable_interrupt(U1PDCA_RX, PDCA_IER_TRC);
+         pdca_channel_disable_interrupt(U0PDCA_RX, PDCA_IER_TRC);
 
     }*/
 
     command error_t Init.init()
     {
-        ioport_set_pin_mode(PIN_PB05B_USART1_TXD, MUX_PB05B_USART1_TXD);
-        ioport_disable_pin(PIN_PB05B_USART1_TXD);
-        ioport_set_pin_mode(PIN_PB04B_USART1_RXD, MUX_PB04B_USART1_RXD);
-        ioport_disable_pin(PIN_PB04B_USART1_RXD);
-        sysclk_enable_peripheral_clock(USART1);
-        usart_reset(USART1);
-        usart_init_rs232(USART1, &usart_settings, sysclk_get_main_hz());
-        usart_enable_tx(USART1);
-        usart_enable_rx(USART1);
+        ioport_set_pin_mode(PIN_PB15A_USART0_TXD, MUX_PB15A_USART0_TXD);
+        ioport_disable_pin(PIN_PB15A_USART0_TXD);
+        ioport_set_pin_mode(PIN_PB14A_USART0_RXD, MUX_PB14A_USART0_RXD);
+        ioport_disable_pin(PIN_PB14A_USART0_RXD);
+        sysclk_enable_peripheral_clock(USART0);
+        usart_reset(USART0);
+        usart_init_rs232(USART0, &usart_settings, sysclk_get_main_hz());
+        usart_enable_tx(USART0);
+        usart_enable_rx(USART0);
 
         txbusy = 0;
 
@@ -178,32 +178,31 @@ static const sam_usart_opt_t usart_settings = {
         pdca_enable(PDCA);
 
         /* Init PDCA channel with the pdca_options.*/
-        pdca_channel_set_config(U1PDCA_TX, &pdca_tx_configs);
+        pdca_channel_set_config(U0PDCA_TX, &pdca_tx_configs);
         //pdca_channel_set_config(U1PDCA_RX, &pdca_rx_configs);
 
-        USART1->US_IER |= 1; //Enable RX interrupt
+        USART0->US_IER |= 1; //Enable RX interrupt
 
         atomic
         {
             /* Enable PDCA channel */
-            pdca_channel_enable(U1PDCA_TX);
+            pdca_channel_enable(U0PDCA_TX);
          //   pdca_channel_enable(U1PDCA_RX);
-            NVIC_EnableIRQ(USART1_IRQn);
+            NVIC_EnableIRQ(USART0_IRQn);
 
             // This automatically enables interrupts and will cause a wild IRQ to appear..
-            pdca_channel_set_callback(U1PDCA_TX, u1pdca_tx_done, PDCA_3_IRQn, 1, PDCA_IER_TRC);
+            pdca_channel_set_callback(U0PDCA_TX, u0pdca_tx_done, PDCA_3_IRQn, 1, PDCA_IER_TRC);
          //   pdca_channel_set_callback(U1PDCA_RX, u1pdca_rx_done, PDCA_4_IRQn, 1, PDCA_IER_TRC);
 
-            pdca_channel_disable_interrupt(U1PDCA_TX, PDCA_IER_TRC);
+            pdca_channel_disable_interrupt(U0PDCA_TX, PDCA_IER_TRC);
           //  pdca_channel_disable_interrupt(U1PDCA_RX, PDCA_IER_TRC);
 
             // .. so we get rid of it
             NVIC_ClearPendingIRQ(PDCA_3_IRQn);
         //    NVIC_ClearPendingIRQ(PDCA_4_IRQn);
-            NVIC_ClearPendingIRQ(USART1_IRQn);
+            NVIC_ClearPendingIRQ(USART0_IRQn);
         }
 
-        //call BLE.send_packet("\r\nAT+RENEW\r\n\r\n\r\n",16);
         return SUCCESS;
     }
 
@@ -214,8 +213,8 @@ static const sam_usart_opt_t usart_settings = {
         if (len > 20) len = 20;
         memcpy(txbuf, packet, len);
         bl_printf("Writing DMA reload for %d bytes\n", len);
-        pdca_channel_write_reload(U1PDCA_TX, (void*) &txbuf[0], len);
-        pdca_channel_enable_interrupt(U1PDCA_TX, PDCA_IER_TRC);
+        pdca_channel_write_reload(U0PDCA_TX, (void*) &txbuf[0], len);
+        pdca_channel_enable_interrupt(U0PDCA_TX, PDCA_IER_TRC);
     }
 
 

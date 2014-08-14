@@ -100,7 +100,7 @@ implementation
                 rb = ((uint32_t) fan)*1120 / 100;
             }
             tc_write_rb(TC0, 2, rb);
-            tc_write_rb(TC1, 2, rb);
+            tc_write_rb(TC1, 0, rb);
         #else
             //We have four levels of fan. May as well make them at quarters
             if (occupancy == 0)
@@ -469,7 +469,7 @@ implementation
         ioport_set_pin_mode(PIN_PC01D_TC1_B0, MUX_PC01D_TC1_B0);
 	    ioport_disable_pin(PIN_PC01D_TC1_B0);
         sysclk_enable_peripheral_clock(TC1);
-        tc_init(TC1, 2,
+        tc_init(TC1, 0,
                 /* Waveform Clock Selection */
                 TC_CMR_TCCLKS_TIMER_CLOCK2
                 | TC_CMR_WAVE /* Waveform mode is enabled */
@@ -480,10 +480,10 @@ implementation
             );
         rc = 1120;
         rb = 0;
-        tc_write_rc(TC1, 2, rc);
-        tc_write_rb(TC1, 2, rb);
+        tc_write_rc(TC1, 0, rc);
+        tc_write_rb(TC1, 0, rb);
 
-        tc_start(TC1, 2);
+        tc_start(TC1, 0);
 
     #endif
     }
