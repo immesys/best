@@ -1,0 +1,7 @@
+
+interface HplSAM4LUsart
+{
+    
+
+
+}

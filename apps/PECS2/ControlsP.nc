@@ -4,6 +4,7 @@
 #include <flash_logger.h>
 #include <tc.h>
 
+#include <battery_table.h>
 /* AD channel selection command and register */
 #define	TP_CHX 	0x90 	/* channel Y+ selection command */
 #define	TP_CHY 	0xd0	/* channel X+ selection command*/
@@ -26,6 +27,7 @@ module ControlsP
         interface Timer<TMilli> as pwmTmr;
         interface FlashLogger;
         interface BLE;
+        interface ADC;
     }
 }
 implementation
@@ -36,7 +38,7 @@ implementation
 
     uint8_t allow_touch;
     uint8_t heat_on;
-
+    uint16_t current_battery;
     typedef struct
     {
         int32_t x;
@@ -93,14 +95,18 @@ implementation
         get_occupance();
         #if PCSVER
             #define p100 1120
-            if (occupancy == 0)
+            if (occupancy == 0 || fan == 0)
             {
-                rb = 0;
+                ioport_set_pin_level(PIN_PC01, 0);
+                tc_write_rb(TC0, 2, 0);
             } else {
                 rb = ((uint32_t) fan)*1120 / 100;
+                ioport_set_pin_level(PIN_PC01, 1);
+                tc_write_rb(TC0, 2, rb);
             }
-            tc_write_rb(TC0, 2, rb);
-            tc_write_rb(TC1, 0, rb);
+
+            //ioport_set_pin_level(PIN_PC01, 0);
+            //tc_write_rb(TC1, 0, rb);
         #else
             //We have four levels of fan. May as well make them at quarters
             if (occupancy == 0)
@@ -188,6 +194,28 @@ implementation
         pack[1] = 0xE5;
         pack[2] = 0x11;
         pack[3] = heating;
+        for (i=0;i<3;i++) pack[4+i] = 0;
+        pack[7] = 0xEB;
+        pack[8] = 0xC4;
+        call BLE.send_packet(&pack[0], 9);
+    }
+
+    void broadcast_ble_battery()
+    {
+        uint8_t pack[10];
+        uint8_t i;
+        uint8_t percentage;
+        for (i=0;i<100;i++)
+        {
+            if (percentage_table[i] >= current_battery) {
+                percentage = i;
+                break;
+            }
+        }
+        pack[0] = 0x70;
+        pack[1] = 0xE5;
+        pack[2] = 0x17;
+        pack[3] = percentage;
         for (i=0;i<3;i++) pack[4+i] = 0;
         pack[7] = 0xEB;
         pack[8] = 0xC4;
@@ -460,12 +488,16 @@ implementation
                 | TC_CMR_EEVT_XC0_OUTPUT
             );
         rc = 1120;
-        rb = 600;
+        rb = 5;
         tc_write_rc(TC0, 2, rc);
         tc_write_rb(TC0, 2, rb);
 
         tc_start(TC0, 2);
 
+        ioport_set_pin_mode(PIN_PC01, IOPORT_DIR_OUTPUT);
+        ioport_enable_pin(PIN_PC01);
+
+        #if 0
         ioport_set_pin_mode(PIN_PC01D_TC1_B0, MUX_PC01D_TC1_B0);
 	    ioport_disable_pin(PIN_PC01D_TC1_B0);
         sysclk_enable_peripheral_clock(TC1);
@@ -484,6 +516,8 @@ implementation
         tc_write_rb(TC1, 0, rb);
 
         tc_start(TC1, 0);
+        #endif
+
 
     #endif
     }
@@ -495,6 +529,7 @@ implementation
         ioport_set_pin_dir(PIN_PB01, IOPORT_DIR_INPUT);
         ioport_set_pin_level(PIN_PB01, 0);
 
+        call ADC.config();
         expander_w(0x40, 0x00, 0x00); //Set all pins as output
         expander_w(0x40, 0x0A, 0x00); //Set some output pins
 
@@ -549,7 +584,7 @@ implementation
         report_cool_dirty = 1;
         report_occu_dirty = 1;
 
-        //pwm_init();
+        pwm_init();
 
         //Configure the heating strip control pins
         ioport_set_pin_dir(PIN_PA08, IOPORT_DIR_OUTPUT);
@@ -563,6 +598,8 @@ implementation
 
         call pwmTmr.startOneShot(1000);
 
+
+
     }
 
     uint32_t cycles_since_last_report = 0;
@@ -571,6 +608,9 @@ implementation
     event void reportTmr.fired()
     {
         uint8_t type = 0;
+        call ADC.sample();
+        broadcast_ble_battery();
+        //bl_printf("Calling ADC sample\n");
         set_fan(); //HACK MUCH?
         if (report_heat_dirty)
         {
@@ -608,6 +648,11 @@ implementation
         }
     }
 
+
+    async event void ADC.sampleComplete(uint16_t x)
+    {
+        current_battery = x;
+    }
     void EIC_4_Handler(void) @C() @spontaneous()
     {
         REG_EIC_ICR = 1 << 4;

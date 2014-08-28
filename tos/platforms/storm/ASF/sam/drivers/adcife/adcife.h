@@ -249,7 +249,7 @@ struct adc_config {
 	/** Prescaler Rate Slection */
 	uint8_t prescal;
 	/** Clock Selection for sequencer/ADC cell */
-	bool clksel;
+	unsigned char clksel;
 	/** ADC current reduction */
 	uint8_t speed;
 	/** ADC Reference selection */
@@ -358,7 +358,7 @@ struct adc_cdma_config {
 /** Parameters for the configuration of the PDCA word. */
 struct adc_pdca_config {
 	/** Window Mode */
-	bool wm;
+	unsigned char wm;
 	/** Number of channels */
 	uint8_t nb_channels;
 	/** ADC Buffer used for PDC transfer */
@@ -570,7 +570,7 @@ static inline void adc_configure_itimer_period(struct adc_dev_inst *const dev_in
  * \param dev_inst    Device structure pointer.
  *
  */
-static inline bool adc_is_busy_itimer(struct adc_dev_inst *const dev_inst)
+static inline unsigned char adc_is_busy_itimer(struct adc_dev_inst *const dev_inst)
 {
 	return (dev_inst->hw_dev->ADCIFE_SR & ADCIFE_SR_TBUSY);
 }
@@ -625,7 +625,7 @@ static inline void adc_configure_wm_threshold(struct adc_dev_inst *const dev_ins
  *
  */
 static inline void adc_configure_calibration(struct adc_dev_inst *const dev_inst,
-		const bool fcd, const bool biassel, const uint8_t biascal,
+		const unsigned char fcd, const unsigned char biassel, const uint8_t biascal,
 		const uint8_t calib)
 {
 	dev_inst->hw_dev->ADCIFE_CALIB =
